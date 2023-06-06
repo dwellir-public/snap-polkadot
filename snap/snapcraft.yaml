@@ -1,0 +1,68 @@
+name: polkadot
+base: core20
+version: "0.1"
+
+summary: Polkadot - A multi-chain framework for better blockchain interoperability
+description: |
+  Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
+
+grade: stable
+confinement: strict
+
+parts:
+  polkadot:
+    plugin: rust
+    source: https://github.com/paritytech/polkadot.git
+    source-depth: 1
+    build-packages:
+      - build-essential
+      - libssl-dev
+      - git 
+      - clang 
+      - libclang-dev 
+      - pkg-config
+      - protobuf-compiler 
+    build-environment:
+      - CARGO_INCREMENTAL: "0"
+    build-snaps:
+      - rustup
+    stage-packages:
+      - libssl-dev
+      - pkg-config
+      - clang
+      - llvm
+      - lld
+      - binutils
+    override-pull: |
+      snapcraftctl pull
+      cd $SNAPCRAFT_PART_SRC
+      git fetch --tags
+      git checkout v0.9.42
+      cd -
+    override-build: |
+      rustup default stable
+      rustup target add wasm32-unknown-unknown
+      rustup update
+      cargo install wasm-pack --version 0.11.1
+      # snapcraftctl build
+      cd $SNAPCRAFT_PART_SRC
+      cargo build --release
+      cd -
+    override-prime: |
+      snapcraftctl prime
+      cd $SNAPCRAFT_PART_INSTALL
+      mkdir -p bin
+      cp $SNAPCRAFT_PART_SRC/target/release/polkadot bin/
+      cd -
+
+apps:
+  polkadot:
+    command: bin/polkadot
+    plugs:
+      - network
+      - network-bind
+
+plugs:
+  network:
+  network-bind:
+
