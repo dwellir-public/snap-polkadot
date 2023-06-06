@@ -48,12 +48,14 @@ parts:
       cd $SNAPCRAFT_PART_SRC
       cargo build --release
       cd -
+      mkdir -p $SNAPCRAFT_PART_INSTALL/target/release
+      cp -a target/release/polkadot $SNAPCRAFT_PART_INSTALL/target/release
+    stage:
+      - target/release/polkadot
     override-prime: |
       snapcraftctl prime
-      cd $SNAPCRAFT_PART_INSTALL
-      mkdir -p bin
-      cp $SNAPCRAFT_PART_SRC/target/release/polkadot bin/
-      cd -
+      mkdir $SNAPCRAFT_PRIME/bin
+      cp $SNAPCRAFT_STAGE/target/release/polkadot $SNAPCRAFT_PRIME/bin/polkadot
 
 apps:
   polkadot:
