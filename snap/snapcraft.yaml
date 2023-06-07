@@ -44,18 +44,34 @@ parts:
       rustup target add wasm32-unknown-unknown
       rustup update
       cargo install wasm-pack --version 0.11.1
-      # snapcraftctl build
+      
+      # Build polkadot
       cd $SNAPCRAFT_PART_SRC
       cargo build --release
-      cd -
-      mkdir -p $SNAPCRAFT_PART_INSTALL/target/release
-      cp -a target/release/polkadot $SNAPCRAFT_PART_INSTALL/target/release
+      
+      # Build runtimes for a few chains with tracing enabled
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
+      
+      # Move binaries and runtimes into the staging area
+      cd $SNAPCRAFT_PART_SRC
+      mkdir -p $SNAPCRAFT_PART_INSTALL/target/release/runtimes
+      cp -a target/release/polkadot $SNAPCRAFT_PART_INSTALL/target/release/
+      cp -a target/release/wbuild/westend-runtime/westend_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/westend_runtime-with-tracing.wasm
+      cp -a target/release/wbuild/rococo-runtime/rococo_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/rococo_runtime-with-tracing.wasm
+      cp -a target/release/wbuild/polkadot-runtime/polkadot_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/polkadot_runtime-with-tracing.wasm
+      cp -a target/release/wbuild/kusama-runtime/kusama_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/kusama_runtime-with-tracing.wasm
     stage:
+      # Stage in the files
       - target/release/polkadot
+      - target/release/runtimes/*
     override-prime: |
-      snapcraftctl prime
-      mkdir $SNAPCRAFT_PRIME/bin
+      # snapcraftctl prime
+      mkdir -p $SNAPCRAFT_PRIME/{bin,runtimes}
       cp $SNAPCRAFT_STAGE/target/release/polkadot $SNAPCRAFT_PRIME/bin/polkadot
+      cp $SNAPCRAFT_STAGE/target/release/runtimes/* $SNAPCRAFT_PRIME/runtimes/
 
 apps:
   polkadot:
