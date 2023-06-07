@@ -67,18 +67,40 @@ parts:
       # Stage in the files
       - target/release/polkadot
       - target/release/runtimes/*
+
     override-prime: |
       # snapcraftctl prime
       mkdir -p $SNAPCRAFT_PRIME/{bin,runtimes}
       cp $SNAPCRAFT_STAGE/target/release/polkadot $SNAPCRAFT_PRIME/bin/polkadot
       cp -r $SNAPCRAFT_STAGE/target/release/runtimes/* $SNAPCRAFT_PRIME/runtimes/
 
+  wrappers:
+    plugin: dump
+    source-type: local
+    source: .
+    stage:
+      - wrappers/
+
+  files:
+    plugin: dump
+    source-type: local
+    source: ./files
+    organize:
+      service-arguments: $SNAPCRAFT_PRIME/etc/default/polkadot
+
 apps:
   polkadot:
-    command: bin/polkadot
+    command: wrappers/start-polkadot.sh
+    daemon: simple
+    install-mode: disable
+    refresh-mode: endure
+    restart-condition: never
     plugs:
       - network
       - network-bind
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
 
 plugs:
   network:
