@@ -12,7 +12,7 @@ Clone the repo, then build with snapcraft
 
     sudo snap install snapcraft --classic
     cd snap-polkadot
-    snapcraft --use-lxd  # Takes some time.
+    snapcraft --use-lxd --debug --verbosity=debug # Takes some time.
 
 
 ## Running polkadot

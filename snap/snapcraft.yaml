@@ -1,24 +1,33 @@
 name: polkadot
 base: core22
-version: "0.1"
+version: git
 
 summary: Polkadot - A multi-chain framework for better blockchain interoperability
-description: |
-  Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
-
-grade: stable
+contact: polkadot-devel@dwellir.com
+issues: https://github.com/dwellir-public/snap-polkadot/issues
+source-code: https://github.com/dwellir-public/snap-polkadot/
+website: https://www.dwellir.com
+grade: devel
 confinement: strict
 
+description: |
+  Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
+  See: https://github.com/paritytech/polkadot
+
 parts:
+
+  install-wasm-toolchain:
+    plugin: nil
+    override-build: |
+      rustup default stable
+      rustup target add wasm32-unknown-unknown
+      rustup update
+      cargo install wasm-pack --version 0.11.1
+
   polkadot:
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
     source-tag: v0.9.42
-    # rustup-channel: stable
-    # rustup-targets:
-    #  - wasm32-unknown-unknown
-    # rust-features:
-    #  - wasm-pack:0.11.1
     source-depth: 1
     build-environment:
       - RUSTUP_TOOLCHAIN: stable
@@ -37,15 +46,34 @@ parts:
       - rustup
     after: [install-wasm-toolchain]
 
-  install-wasm-toolchain:
-    plugin: nil
-    override-build: |
-      rustup default stable
-      rustup target add wasm32-unknown-unknown
-      rustup update
-      cargo install wasm-pack --version 0.11.1
-    
+# This step depends on polkadot - so all environment for rust should already have been set.
+# Not repeating this here.
 
+  runtimes-with-tracing:
+    plugin: rust
+    source: https://github.com/paritytech/polkadot.git
+    source-tag: v0.9.42
+    build-environment:
+      - RUSTUP_TOOLCHAIN: stable
+      - RUSTUP_TARGET: wasm32-unknown-unknown
+    override-build: |
+       set -ex
+       mkdir -p ${CRAFT_PART_INSTALL}/{westend-runtime-with-traces,rococo-runtime-with-traces,polkadot-runtime-with-traces,kusama-runtime-with-traces}
+       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
+       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
+       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
+       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
+       # ship one of the runtimes built. There are more, but only ship the compact.
+       cp target/release/wbuild/westend-runtime/westend_runtime.compact.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
+       cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
+       cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
+       cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
+    prime:
+      - westend-runtime-with-traces/
+      - rococo-runtime-with-traces/
+      - polkadot-runtime-with-traces/
+      - kusama-runtime-with-traces/
+    after: [polkadot, install-wasm-toolchain]
 
   wrappers:
     plugin: dump
@@ -53,13 +81,6 @@ parts:
     source: .
     stage:
       - wrappers/
-
-  files:
-    plugin: dump
-    source-type: local
-    source: ./files
-    organize:
-      service-arguments: etc/service-arguments
 
 apps:
   polkadot:
