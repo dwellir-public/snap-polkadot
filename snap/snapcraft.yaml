@@ -1,5 +1,5 @@
 name: polkadot
-base: core20
+base: core22
 version: "0.1"
 
 summary: Polkadot - A multi-chain framework for better blockchain interoperability
@@ -13,8 +13,19 @@ parts:
   polkadot:
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
+    source-tag: v0.9.42
+    # rustup-channel: stable
+    # rustup-targets:
+    #  - wasm32-unknown-unknown
+    # rust-features:
+    #  - wasm-pack:0.11.1
     source-depth: 1
+    build-environment:
+      - RUSTUP_TOOLCHAIN: stable
+      - RUSTUP_TARGET: wasm32-unknown-unknown
+      - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
     build-packages:
+      - curl
       - build-essential
       - libssl-dev
       - git 
@@ -22,57 +33,19 @@ parts:
       - libclang-dev 
       - pkg-config
       - protobuf-compiler 
-    build-environment:
-      - CARGO_INCREMENTAL: "0"
     build-snaps:
       - rustup
-    stage-packages:
-      - libssl-dev
-      - pkg-config
-      - clang
-      - llvm
-      - lld
-      - binutils
-    override-pull: |
-      snapcraftctl pull
-      cd $SNAPCRAFT_PART_SRC
-      git fetch --tags
-      git checkout v0.9.42
-      cd -
+    after: [install-wasm-toolchain]
+
+  install-wasm-toolchain:
+    plugin: nil
     override-build: |
       rustup default stable
       rustup target add wasm32-unknown-unknown
       rustup update
       cargo install wasm-pack --version 0.11.1
-      
-      # Build polkadot
-      cd $SNAPCRAFT_PART_SRC
-      cargo build --release
-      
-      # Build runtimes for a few chains with tracing enabled
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
-      
-      # Move binaries and runtimes into the staging area
-      cd $SNAPCRAFT_PART_SRC
-      mkdir -p $SNAPCRAFT_PART_INSTALL/target/release/runtimes/{westend,rococo,polkadot,kusama}
-      cp -a target/release/polkadot $SNAPCRAFT_PART_INSTALL/target/release/
-      cp -a target/release/wbuild/westend-runtime/westend_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/westend/westend_runtime-with-tracing.wasm
-      cp -a target/release/wbuild/rococo-runtime/rococo_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/rococo/rococo_runtime-with-tracing.wasm
-      cp -a target/release/wbuild/polkadot-runtime/polkadot_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/polkadot/polkadot_runtime-with-tracing.wasm
-      cp -a target/release/wbuild/kusama-runtime/kusama_runtime.wasm $SNAPCRAFT_PART_INSTALL/target/release/runtimes/kusama/kusama_runtime-with-tracing.wasm
-    stage:
-      # Stage in the files
-      - target/release/polkadot
-      - target/release/runtimes/*
+    
 
-    override-prime: |
-      # snapcraftctl prime
-      mkdir -p $SNAPCRAFT_PRIME/{bin,runtimes}
-      cp $SNAPCRAFT_STAGE/target/release/polkadot $SNAPCRAFT_PRIME/bin/polkadot
-      cp -r $SNAPCRAFT_STAGE/target/release/runtimes/* $SNAPCRAFT_PRIME/runtimes/
 
   wrappers:
     plugin: dump
@@ -86,11 +59,11 @@ parts:
     source-type: local
     source: ./files
     organize:
-      service-arguments: $SNAPCRAFT_PRIME/etc/default/polkadot
+      service-arguments: etc/service-arguments
 
 apps:
   polkadot:
-    command: wrappers/start-polkadot.sh
+    command: wrappers/start-polkadot.sh $SNAP_DATA/service-arguments
     daemon: simple
     install-mode: disable
     refresh-mode: endure
