@@ -11,28 +11,39 @@ Clone the repo, then build with snapcraft
     cd snap-polkadot
     snapcraft --use-lxd --debug --verbosity=debug # Takes some time.
 
+## Releasing to edge (work in progress)
+The snap inherits (adopt-info) the version by picking up the version from the upstream polkadot repo tag.
+E.g. "v0.9.42" etc. and adds the commit hash to it.
 
-## Running polkadot
+The release to the edge is then:
+
+    snapcraft upload --release=edge ./polkadot_<version>.snap
     
 ### Install snap
+
     $ sudo snap install polkadot.charm --devmode
 
 ### Check/edit startup params
+
     $ sudo vi /var/snap/polkadot/common/service-arguments
 
 ### Inspect the snap
+
     $ snap services polkadot
     Service            Startup   Current   Notes
     polkadot.polkadot  disabled  inactive  -
 
 ### Start the service
+
     $ sudo snap start polkadot
 
 ### Stop the service
+
     $ sudo snap stop polkadot
 
 ### Alternatively - use systemd
-    $ sudo systemctl start snap.polkadot.polkadot.service 
+
+    $ sudo systemctl <stop|start> snap.polkadot.polkadot.service 
 
 ## Running with custom runtime for tracing
 

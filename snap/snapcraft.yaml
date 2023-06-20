@@ -1,7 +1,6 @@
 name: polkadot
 base: core22
-version: git
-
+adopt-info: polkadot
 summary: Polkadot - A multi-chain framework for better blockchain interoperability
 contact: polkadot-devel@dwellir.com
 issues: https://github.com/dwellir-public/snap-polkadot/issues
@@ -14,6 +13,8 @@ description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
   See: https://github.com/paritytech/polkadot
 
+  This snap is maintained by Dwellir https://www.dwellir.com
+
 parts:
 
   install-wasm-toolchain:
@@ -25,9 +26,10 @@ parts:
       cargo install wasm-pack --version 0.11.1
 
   polkadot:
+    after: [install-wasm-toolchain]
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
-    source-tag: v0.9.42
+    source-tag: v0.9.43
     source-depth: 1
     build-environment:
       - RUSTUP_TOOLCHAIN: stable
@@ -44,7 +46,9 @@ parts:
       - protobuf-compiler 
     build-snaps:
       - rustup
-    after: [install-wasm-toolchain]
+    override-pull: |
+      craftctl default
+      craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
 
 # This step depends on polkadot - so all environment for rust should already have been set.
 # Not repeating this here.
@@ -52,7 +56,7 @@ parts:
   runtimes-with-tracing:
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
-    source-tag: v0.9.42
+    source-tag: v0.9.43
     build-environment:
       - RUSTUP_TOOLCHAIN: stable
       - RUSTUP_TARGET: wasm32-unknown-unknown
