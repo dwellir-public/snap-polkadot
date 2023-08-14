@@ -9,7 +9,7 @@ Clone the repo, then build with snapcraft
 
     sudo snap install snapcraft --classic
     cd snap-polkadot
-    snapcraft --use-lxd --debug --verbosity=debug # Takes some time.
+    snapcraft pack --use-lxd --debug --verbosity=debug # Takes some time.
 
 ## Releasing to edge (work in progress)
 The snap inherits (adopt-info) the version by picking up the version from the upstream polkadot repo tag.

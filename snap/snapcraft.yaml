@@ -17,35 +17,37 @@ description: |
 
 parts:
 
-  install-wasm-toolchain:
-    plugin: nil
-    override-build: |
-      rustup default stable
-      rustup target add wasm32-unknown-unknown
-      rustup update
-      cargo install wasm-pack --version 0.11.1
+  #install-wasm-toolchain:
+    #plugin: nil
+    #override-build: |
+      #rustup default stable
+      #rustup target add wasm32-unknown-unknown
+      #rustup update
+      #cargo install wasm-pack --version 0.11.1
 
   polkadot:
-    after: [install-wasm-toolchain]
+    #after: [install-wasm-toolchain]
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
     source-tag: v0.9.43
     source-depth: 1
-    build-environment:
-      - RUSTUP_TOOLCHAIN: stable
-      - RUSTUP_TARGET: wasm32-unknown-unknown
-      - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
-    build-packages:
-      - curl
-      - build-essential
-      - libssl-dev
-      - git 
-      - clang 
-      - libclang-dev 
-      - pkg-config
-      - protobuf-compiler 
-    build-snaps:
-      - rustup
+    #build-environment:
+    #  - RUSTUP_TOOLCHAIN: stable
+    #  - RUSTUP_TARGET: wasm32-unknown-unknown
+    #  - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
+    # TODO Clean up build-packages
+    # build-packages:
+    #   - curl
+    #   - build-essential
+    #   - libssl-dev
+    #   - git 
+    #   - clang 
+    #   - libclang-dev 
+    #   - pkg-config
+    #   - protobuf-compiler 
+    #build-snaps:
+    #  - rustup
+    # Do this in override pull to get the commit hash in the snap info
     override-pull: |
       craftctl default
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
@@ -53,31 +55,31 @@ parts:
 # This step depends on polkadot - so all environment for rust should already have been set.
 # Not repeating this here.
 
-  runtimes-with-tracing:
-    plugin: rust
-    source: https://github.com/paritytech/polkadot.git
-    source-tag: v0.9.43
-    build-environment:
-      - RUSTUP_TOOLCHAIN: stable
-      - RUSTUP_TARGET: wasm32-unknown-unknown
-    override-build: |
-       set -ex
-       mkdir -p ${CRAFT_PART_INSTALL}/{westend-runtime-with-traces,rococo-runtime-with-traces,polkadot-runtime-with-traces,kusama-runtime-with-traces}
-       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
-       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
-       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
-       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
-       # ship one of the runtimes built. There are more, but only ship the compact.
-       cp target/release/wbuild/westend-runtime/westend_runtime.compact.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
-       cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
-       cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
-       cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
-    prime:
-      - westend-runtime-with-traces/
-      - rococo-runtime-with-traces/
-      - polkadot-runtime-with-traces/
-      - kusama-runtime-with-traces/
-    after: [polkadot, install-wasm-toolchain]
+  # runtimes-with-tracing:
+  #   plugin: rust
+  #   source: https://github.com/paritytech/polkadot.git
+  #   source-tag: v0.9.43
+  #   build-environment:
+  #     - RUSTUP_TOOLCHAIN: stable
+  #     - RUSTUP_TARGET: wasm32-unknown-unknown
+  #   override-build: |
+  #      set -ex
+  #      mkdir -p ${CRAFT_PART_INSTALL}/{westend-runtime-with-traces,rococo-runtime-with-traces,polkadot-runtime-with-traces,kusama-runtime-with-traces}
+  #      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
+  #      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
+  #      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
+  #      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
+  #      # ship one of the runtimes built. There are more, but only ship the compact.
+  #      cp target/release/wbuild/westend-runtime/westend_runtime.compact.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
+  #      cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
+  #      cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
+  #      cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
+  #   prime:
+  #     - westend-runtime-with-traces/
+  #     - rococo-runtime-with-traces/
+  #     - polkadot-runtime-with-traces/
+  #     - kusama-runtime-with-traces/
+  #   after: [polkadot, install-wasm-toolchain]
 
   wrappers:
     plugin: dump
@@ -100,7 +102,7 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
 
-plugs:
-  network:
-  network-bind:
+#plugs:
+#  network:
+#  network-bind:
 
