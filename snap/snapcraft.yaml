@@ -17,24 +17,24 @@ description: |
 
 parts:
 
-  #install-wasm-toolchain:
-    #plugin: nil
-    #override-build: |
-      #rustup default stable
-      #rustup target add wasm32-unknown-unknown
-      #rustup update
-      #cargo install wasm-pack --version 0.11.1
+  install-wasm-toolchain:
+    plugin: nil
+    override-build: |
+      rustup default stable
+      rustup target add wasm32-unknown-unknown
+      rustup update
+      cargo install wasm-pack --version 0.11.1
 
   polkadot:
-    #after: [install-wasm-toolchain]
+    after: [install-wasm-toolchain]
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
     source-tag: v0.9.43
     source-depth: 1
     build-environment:
       - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
-    #  - RUSTUP_TOOLCHAIN: stable
-    #  - RUSTUP_TARGET: wasm32-unknown-unknown
+      - RUSTUP_TOOLCHAIN: stable
+      - RUSTUP_TARGET: wasm32-unknown-unknown
     build-packages:
       - build-essential
       - libssl-dev
