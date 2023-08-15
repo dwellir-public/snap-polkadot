@@ -42,15 +42,25 @@ parts:
       - clang 
       - libclang-dev 
       - pkg-config
+      - protobuf-compiler
+      # -curl      
     build-snaps:
       - rustup
-    # Get the commit hash in the snap info
+    # Make the commit hash available for snap info
     override-pull: |
       craftctl default
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
     override-build: |
       ./scripts/init.sh
       snapcraftctl build
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
+      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
+      cp target/release/wbuild/westend-runtime/westend_runtime.compact.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
+      cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
+      cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
+      cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
 
 # This step depends on polkadot - so all environment for rust should already have been set.
 # Not repeating this here.
