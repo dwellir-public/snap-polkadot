@@ -51,16 +51,26 @@ parts:
       craftctl default
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
     override-build: |
+      # TODO in theory this plus build-packages should be enough before building but we need the steps in install-wasm-toolchain for some reason.
       ./scripts/init.sh
+      # Build main binary using build function of plugin
       snapcraftctl build
+      # Building wasm runtime binaries with tracing capabilities
       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
-      cp target/release/wbuild/westend-runtime/westend_runtime.compact.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
-      cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
-      cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
-      cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
+      mkdir -p ${CRAFT_PART_INSTALL}/{westend-runtime-with-traces,rococo-runtime-with-traces,polkadot-runtime-with-traces,kusama-runtime-with-traces}
+      # Use compact.compressed version of wasm runtimes. All versions seems to work and this one is smallest in size.
+      cp target/release/wbuild/westend-runtime/westend_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
+      cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
+      cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
+      cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
+    prime:
+      - westend-runtime-with-traces/
+      - rococo-runtime-with-traces/
+      - polkadot-runtime-with-traces/
+      - kusama-runtime-with-traces/
 
 # This step depends on polkadot - so all environment for rust should already have been set.
 # Not repeating this here.
