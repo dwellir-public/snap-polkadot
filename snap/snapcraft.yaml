@@ -35,8 +35,6 @@ parts:
       - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
     #  - RUSTUP_TOOLCHAIN: stable
     #  - RUSTUP_TARGET: wasm32-unknown-unknown
-    #  
-    # TODO Clean up build-packages
     build-packages:
       - build-essential
       - libssl-dev
@@ -44,8 +42,8 @@ parts:
       - clang 
       - libclang-dev 
       - pkg-config
-    #build-snaps:
-    #  - rustup
+    build-snaps:
+      - rustup
     # Get the commit hash in the snap info
     override-pull: |
       craftctl default
