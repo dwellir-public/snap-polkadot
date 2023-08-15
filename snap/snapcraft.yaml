@@ -31,10 +31,11 @@ parts:
     source: https://github.com/paritytech/polkadot.git
     source-tag: v0.9.43
     source-depth: 1
-    #build-environment:
+    build-environment:
+      - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
     #  - RUSTUP_TOOLCHAIN: stable
     #  - RUSTUP_TARGET: wasm32-unknown-unknown
-    #  - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
+    #  
     # TODO Clean up build-packages
     # build-packages:
     #   - curl
@@ -47,7 +48,7 @@ parts:
     #   - protobuf-compiler 
     #build-snaps:
     #  - rustup
-    # Do this in override pull to get the commit hash in the snap info
+    # Get the commit hash in the snap info
     override-pull: |
       craftctl default
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
