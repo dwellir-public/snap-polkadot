@@ -37,21 +37,22 @@ parts:
     #  - RUSTUP_TARGET: wasm32-unknown-unknown
     #  
     # TODO Clean up build-packages
-    # build-packages:
-    #   - curl
-    #   - build-essential
-    #   - libssl-dev
-    #   - git 
-    #   - clang 
-    #   - libclang-dev 
-    #   - pkg-config
-    #   - protobuf-compiler 
+    build-packages:
+      - build-essential
+      - libssl-dev
+      - git 
+      - clang 
+      - libclang-dev 
+      - pkg-config
     #build-snaps:
     #  - rustup
     # Get the commit hash in the snap info
     override-pull: |
       craftctl default
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
+    override-build: |
+      ./scripts/init.sh
+      snapcraftctl build
 
 # This step depends on polkadot - so all environment for rust should already have been set.
 # Not repeating this here.
