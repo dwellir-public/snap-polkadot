@@ -54,7 +54,7 @@ parts:
       # TODO in theory this plus build-packages should be enough before building but we need the steps in install-wasm-toolchain for some reason.
       ./scripts/init.sh
       # Build main binary using build function of plugin
-      snapcraftctl build
+      craftctl default
       # Building wasm runtime binaries with tracing capabilities
       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
       cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
@@ -67,6 +67,7 @@ parts:
       cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
       cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
     prime:
+      - bin/polkadot
       - westend-runtime-with-traces/
       - rococo-runtime-with-traces/
       - polkadot-runtime-with-traces/
@@ -110,7 +111,7 @@ parts:
 
 apps:
   polkadot:
-    command: wrappers/start-polkadot.sh $SNAP_DATA/service-arguments
+    command: wrappers/start-polkadot.sh
     daemon: simple
     install-mode: disable
     refresh-mode: endure
