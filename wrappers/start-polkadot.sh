@@ -23,5 +23,6 @@ SERVICE_ARGS=$(cat "$SERVICE_ARGS_FILE")
 echo "=> Service arguments: ${SERVICE_ARGS}"
 # Start the service with the specified parameters
 POLKADOT="${SNAP}/bin/polkadot"
+# TODO something in this code interprets quotes wrong making it impossible to pass strings with spaces e.g. --name "node name"
 exec "${POLKADOT}" $SERVICE_ARGS
 
