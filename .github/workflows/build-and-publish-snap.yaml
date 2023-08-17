@@ -1,0 +1,25 @@
+name: Build and publish Polkadot snap
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: snapcore/action-build@v1
+      id: snapcraft
+    - uses: actions/upload-artifact@v3
+      with:
+        name: snap
+        path: ${{ steps.snapcraft.outputs.snap }}
+    - name: Save snapcraft log
+      uses: actions/upload-artifact@v3
+      if: ${{ failure() && steps.snapcraft.conclusion == 'failure' }}
+      with:
+        name: log
+        path: /home/runner/.local/state/snapcraft/log/snapcraft-*.log
+  # test:
+  #   runs-on: ubuntu-latest
+  # publish:
+  #   runs-on: ubuntu-latest
