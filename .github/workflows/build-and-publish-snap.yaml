@@ -1,9 +1,6 @@
 name: Build and publish Polkadot snap
 
-on:
-  push:
-    branches:
-      - judd-develop
+on: workflow_dispatch
 
 jobs:
   build:
@@ -22,3 +19,7 @@ jobs:
       with:
         name: log
         path: /home/runner/.local/state/snapcraft/log/snapcraft-*.log
+  # test:
+  #   runs-on: ubuntu-latest
+  # publish:
+  #   runs-on: ubuntu-latest
