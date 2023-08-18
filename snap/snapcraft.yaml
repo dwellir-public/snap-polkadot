@@ -9,6 +9,10 @@ website: https://www.dwellir.com
 grade: devel
 confinement: strict
 
+architectures:
+  - amd64
+  - arm64
+
 description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
   See: https://github.com/paritytech/polkadot
