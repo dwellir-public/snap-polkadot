@@ -6,7 +6,7 @@ contact: polkadot-devel@dwellir.com
 issues: https://github.com/dwellir-public/snap-polkadot/issues
 source-code: https://github.com/dwellir-public/snap-polkadot/
 website: https://www.dwellir.com
-grade: devel
+grade: stable
 confinement: strict
 
 description: |
