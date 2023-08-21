@@ -33,7 +33,7 @@ parts:
     after: [install-wasm-toolchain]
     plugin: rust
     source: https://github.com/paritytech/polkadot.git
-    source-tag: v0.9.43
+    source-tag: v1.0.0
     source-depth: 1
     build-environment:
       - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
@@ -97,8 +97,3 @@ apps:
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
-
-#plugs:
-#  network:
-#  network-bind:
-
