@@ -10,8 +10,11 @@ jobs:
       uses: actions/checkout@v3
     - name: Install snapcraft
       uses: samuelmeuli/action-snapcraft@v2
+    - name: Clean
+      run: snapcraft clean
     - name: Build snap
-      run: snapcraft pack
+      id: snapcraft
+      run: snapcraft pack --destructive-mode
     # - uses: snapcore/action-build@v1
     #   id: snapcraft
     # - uses: actions/upload-artifact@v3
