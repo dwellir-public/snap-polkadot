@@ -14,7 +14,7 @@ jobs:
       run: snapcraft clean
     - name: Build snap
       id: snapcraft
-      run: snapcraft pack --destructive-mode
+      run: sudo snapcraft pack --destructive-mode
     # - uses: snapcore/action-build@v1
     #   id: snapcraft
     # - uses: actions/upload-artifact@v3
