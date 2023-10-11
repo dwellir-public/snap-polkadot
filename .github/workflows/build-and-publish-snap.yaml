@@ -14,19 +14,17 @@ jobs:
       run: snapcraft clean
     - name: Build snap
       id: snapcraft
-      run: sudo snapcraft pack --destructive-mode
-    # - uses: snapcore/action-build@v1
-    #   id: snapcraft
-    # - uses: actions/upload-artifact@v3
-    #   with:
-    #     name: snap
-    #     path: ${{ steps.snapcraft.outputs.snap }}
-    # - name: Save snapcraft log
-    #   uses: actions/upload-artifact@v3
-    #   if: ${{ failure() && steps.snapcraft.conclusion == 'failure' }}
-    #   with:
-    #     name: log
-    #     path: /home/runner/.local/state/snapcraft/log/snapcraft-*.log
+      run: sudo snapcraft pack --destructive-mode --verbosity debug --debug
+    - uses: actions/upload-artifact@v3
+      with:
+        name: polkadot-snap.snap
+        path: polkadot_*_amd64.snap
+    - name: Save snapcraft log
+      uses: actions/upload-artifact@v3
+      if: ${{ failure() && steps.snapcraft.conclusion == 'failure' }}
+      with:
+        name: snapcraft.log
+        path: /home/runner/.local/state/snapcraft/log/snapcraft-*.log
   # test:
   #   runs-on: ubuntu-latest
   # publish:
