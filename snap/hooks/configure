@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+
+import os
+import socket
+import subprocess as sp
+from pathlib import Path
+
+# Snap environment
+SNAP_COMMON = Path(os.getenv('SNAP_COMMON'))
+
+# Constants
+BASE_PATH = Path(SNAP_COMMON, 'polkadot_base')
+HARDCODED_SERVICE_ARGS = [f'--base-path={BASE_PATH}']
+SERVICE_ARGS_FILE = Path(SNAP_COMMON, 'service-arguments')
+
+
+def snap_get(variable):
+    return sp.run(['snapctl', 'get', variable], text=True, capture_output=True, check=True).stdout
+
+
+def snap_set(variable, value):
+    sp.run(['snapctl', 'set', f'{variable}="{value.strip()}"', '-t'], check=True)
+
+
+def snap_restart():
+    sp.run(['snapctl', 'restart', 'polkadot'], check=True)
+
+
+if __name__ == '__main__':
+    service_args = snap_get('service-args')
+    # TODO base path isnot allowed to be set. Validate and remove or reject change if so.
+    if not service_args:
+        service_args=f'--name={socket.gethostname()}'
+    service_args = f'--base-path={BASE_PATH} {service_args}'
+    snap_set('service-args', service_args)
+    # TODO get this print to journal. Probably use some logging?
+    print(f'Writing service_args to file: {service_args}')
+    with open(SERVICE_ARGS_FILE, 'w', encoding='utf-8') as file:
+        file.write(service_args)
+    snap_restart()

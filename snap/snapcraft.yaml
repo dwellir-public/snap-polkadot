@@ -1,6 +1,6 @@
 name: polkadot
 base: core22
-adopt-info: polkadot
+version: v0.1
 summary: Polkadot - A multi-chain framework for better blockchain interoperability
 contact: polkadot-devel@dwellir.com
 issues: https://github.com/dwellir-public/snap-polkadot/issues
@@ -21,61 +21,61 @@ description: |
 
 parts:
 
-  install-wasm-toolchain:
-    plugin: nil
-    override-build: |
-      rustup default stable
-      rustup target add wasm32-unknown-unknown
-      rustup update
-      cargo install wasm-pack --version 0.11.1
+  # install-wasm-toolchain:
+  #   plugin: nil
+  #   override-build: |
+  #     rustup default stable
+  #     rustup target add wasm32-unknown-unknown
+  #     rustup update
+  #     cargo install wasm-pack --version 0.11.1
 
-  polkadot:
-    after: [install-wasm-toolchain]
-    plugin: rust
-    source: https://github.com/paritytech/polkadot.git
-    source-tag: v1.0.0
-    source-depth: 1
-    build-environment:
-      - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
-      - RUSTUP_TOOLCHAIN: stable
-      - RUSTUP_TARGET: wasm32-unknown-unknown
-    build-packages:
-      - build-essential
-      - libssl-dev
-      - git 
-      - clang 
-      - libclang-dev 
-      - pkg-config
-      - protobuf-compiler
-      # -curl      
-    build-snaps:
-      - rustup
-    # Make the commit hash available for snap info
-    override-pull: |
-      craftctl default
-      craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
-    override-build: |
-      # TODO according to the readme in the polkadot repo init.sh plus build-packages should be enough before building but we need the steps in install-wasm-toolchain as well for some reason.
-      ./scripts/init.sh
-      # Build main binary using default function of plugin (like calling super)
-      craftctl default
-      # Building wasm runtime binaries with tracing capabilities
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
-      cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
-      mkdir -p ${CRAFT_PART_INSTALL}/{westend-runtime-with-traces,rococo-runtime-with-traces,polkadot-runtime-with-traces,kusama-runtime-with-traces}
-      # Use compact.compressed version of wasm runtimes. All versions seems to work and this one is smallest in size.
-      cp target/release/wbuild/westend-runtime/westend_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
-      cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
-      cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
-      cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
-    prime:
-      - bin/polkadot
-      - westend-runtime-with-traces/
-      - rococo-runtime-with-traces/
-      - polkadot-runtime-with-traces/
-      - kusama-runtime-with-traces/
+  # polkadot:
+  #   after: [install-wasm-toolchain]
+  #   plugin: rust
+  #   source: https://github.com/paritytech/polkadot.git
+  #   source-tag: v1.0.0
+  #   source-depth: 1
+  #   build-environment:
+  #     - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
+  #     - RUSTUP_TOOLCHAIN: stable
+  #     - RUSTUP_TARGET: wasm32-unknown-unknown
+  #   build-packages:
+  #     - build-essential
+  #     - libssl-dev
+  #     - git 
+  #     - clang 
+  #     - libclang-dev 
+  #     - pkg-config
+  #     - protobuf-compiler
+  #     # -curl      
+  #   build-snaps:
+  #     - rustup
+  #   # Make the commit hash available for snap info
+  #   override-pull: |
+  #     craftctl default
+  #     craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
+  #   override-build: |
+  #     # TODO according to the readme in the polkadot repo init.sh plus build-packages should be enough before building but we need the steps in install-wasm-toolchain as well for some reason.
+  #     ./scripts/init.sh
+  #     # Build main binary using default function of plugin (like calling super)
+  #     craftctl default
+  #     # Building wasm runtime binaries with tracing capabilities
+  #     cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/westend/Cargo.toml
+  #     cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/rococo/Cargo.toml
+  #     cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/polkadot/Cargo.toml
+  #     cargo build --release --features frame-executive/with-tracing,sp-io/with-tracing --manifest-path runtime/kusama/Cargo.toml
+  #     mkdir -p ${CRAFT_PART_INSTALL}/{westend-runtime-with-traces,rococo-runtime-with-traces,polkadot-runtime-with-traces,kusama-runtime-with-traces}
+  #     # Use compact.compressed version of wasm runtimes. All versions seems to work and this one is smallest in size.
+  #     cp target/release/wbuild/westend-runtime/westend_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/westend-runtime-with-traces/
+  #     cp target/release/wbuild/rococo-runtime/rococo_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/rococo-runtime-with-traces/
+  #     cp target/release/wbuild/polkadot-runtime/polkadot_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/polkadot-runtime-with-traces/
+  #     cp target/release/wbuild/kusama-runtime/kusama_runtime.compact.compressed.wasm ${CRAFT_PART_INSTALL}/kusama-runtime-with-traces/
+  #   prime:
+  #     - bin/polkadot
+  #     - westend-runtime-with-traces/
+  #     - rococo-runtime-with-traces/
+  #     - polkadot-runtime-with-traces/
+  #     - kusama-runtime-with-traces/
 
   wrappers:
     plugin: dump
@@ -83,10 +83,11 @@ parts:
     source: .
     stage:
       - wrappers/
+      - files/polkadot
 
 apps:
   polkadot:
-    command: wrappers/start-polkadot.sh
+    command: wrappers/start-polkadot.py
     daemon: simple
     install-mode: disable
     refresh-mode: endure
