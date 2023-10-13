@@ -37,6 +37,10 @@ The release to the edge is then:
 
     $ sudo snap start polkadot
 
+### Check logs from polkadot
+
+    $ sudo snap logs polkadot -f
+
 ### Stop the service
 
     $ sudo snap stop polkadot

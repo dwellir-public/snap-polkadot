@@ -17,7 +17,13 @@ description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
   See: https://github.com/paritytech/polkadot
 
-  This snap is maintained by Dwellir https://www.dwellir.com
+  Maintained by Dwellir https://www.dwellir.com
+
+  Start the service with 'sudo snap start polkadot'
+
+  Modify startup arguments in /var/snap/polkadot/common/service-arguments
+
+  Check logs with 'snap logs polkadot -f'
 
 parts:
 
