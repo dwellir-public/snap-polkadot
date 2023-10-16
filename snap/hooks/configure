@@ -1,0 +1,45 @@
+#!/bin/sh
+
+BASE_PATH="$SNAP_COMMON/polkadot_base"
+SERVICE_ARGS_FILE="$SNAP_COMMON/service-arguments"
+
+set_service_args()
+{
+    snapctl set service-args="$1"
+}
+
+get_service_args()
+{
+    service_args="$(snapctl get service-args)"
+    if [ -z "$service_args" ]; then
+        logger -t ${SNAP_NAME} "Setting default service args"
+        service_args="--name=$(hostname)"
+        set_service_args $service_args
+    fi
+    echo "$service_args"
+}
+
+validate_service_args()
+{
+    case "$1" in 
+        *base-path*)
+            logger -t ${SNAP_NAME} "base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
+            echo "base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
+            service_args_from_file=$(cat "$SERVICE_ARGS_FILE")
+            set_service_args $service_args_from_file
+            exit 1
+            ;;
+        esac
+}
+
+handle_service_args_config()
+{
+    service_args="$(get_service_args)"
+    validate_service_args "$service_args"
+    set_service_args $service_args
+    logger -t ${SNAP_NAME} "Writing --base-path=$BASE_PATH and $service_args to $SERVICE_ARGS_FILE"
+    echo "--base-path=$BASE_PATH $service_args" > "$SERVICE_ARGS_FILE"
+    snapctl restart ${SNAP_NAME}
+}
+
+handle_service_args_config
