@@ -6,8 +6,7 @@ echo "=> Preparing the system  (${SNAP_REVISION})"
 SERVICE_ARGS_FILE="$SNAP_COMMON/service-arguments"
 # SERVICE_ARGS=$(tr '\n' ' ' < "$SERVICE_ARGS_FILE")
 SERVICE_ARGS=$(cat "$SERVICE_ARGS_FILE")
-#POLKADOT_BINARY_PATH="${SNAP}/bin/polkadot"
-POLKADOT_BINARY_PATH="$SNAP/files/polkadot"
+POLKADOT_BINARY_PATH="${SNAP}/bin/polkadot"
 
 
 echo "=> Service arguments: ${SERVICE_ARGS}"
