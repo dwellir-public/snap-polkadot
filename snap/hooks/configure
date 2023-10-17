@@ -12,6 +12,7 @@ log()
 set_service_args()
 {
     snapctl set service-args="$1"
+    set_previous_service_args "$1"
 }
 
 get_service_args()
@@ -25,6 +26,21 @@ get_service_args()
     echo "$service_args"
 }
 
+set_previous_service_args()
+{
+    snapctl set private.service-args="$1"
+}
+
+get_previous_service_args()
+{
+    snapctl get private.service-args
+}
+
+service_args_has_changed()
+{
+	[ "$(get_service_args)" != "$(get_previous_service_args)" ]
+}
+
 validate_service_args()
 {
     case "$1" in 
@@ -32,8 +48,7 @@ validate_service_args()
             log "base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
             # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
             echo "base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
-            service_args_from_file=$(cat "$SERVICE_ARGS_FILE")
-            set_service_args $service_args_from_file
+            set_service_args "$(get_previous_service_args)"
             exit 1
             ;;
         esac
@@ -41,9 +56,14 @@ validate_service_args()
 
 handle_service_args_config()
 {
+    if ! service_args_has_changed; then
+        echo "Service args was not changed."
+		exit 1
+	fi
+
     service_args="$(get_service_args)"
     validate_service_args "$service_args"
-    set_service_args $service_args
+    set_service_args "$service_args"
     log "Writing --base-path=$BASE_PATH and $service_args to $SERVICE_ARGS_FILE"
     echo "--base-path=$BASE_PATH $service_args" > "$SERVICE_ARGS_FILE"
     snapctl restart ${SNAP_NAME}
