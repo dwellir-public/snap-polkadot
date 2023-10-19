@@ -23,15 +23,28 @@ The release to the edge is then:
 
     $ sudo snap install polkadot.charm --devmode
 
-### Check/edit startup params
-
-    $ sudo vi /var/snap/polkadot/common/service-arguments
-
 ### Inspect the snap
 
     $ snap services polkadot
     Service            Startup   Current   Notes
     polkadot.polkadot  disabled  inactive  -
+
+### Configuration
+
+#### service-args
+
+Arguments passed to the Polkadot service. Set and get with snap set/get polkadot service-args 
+
+* --name defaults to the systems hostname the first time the snap is installed.
+* --base-path is always set by the snap and is not allowed to be configured.
+* --wasm-runtime-overrides is set when tracing is enabled and is not allowed to be configured.
+* --rpc-methods is not allowed to be set if tracing is enabled since tracing required the value to be true.
+
+#### tracing-enabled
+
+If true tracing will be enabled on the Polkadot service. This means that service args --wasm-runtime-overrides will be set and point to the correct runtime overrides based on the running chain and that --rpc-methods will be set to true.
+
+Is not allowed to be enabled if --rpc-methods is set in service-args since it needs to be true for tracing to work.
 
 ### Start the service
 
