@@ -90,6 +90,14 @@ validate_service_args()
             set_service_args "$(get_previous_service_args)"
             exit 1
             ;;
+        *wasm-runtime-overrides*)
+            log_message="wasm-runtime-overrides is not allowed to pass as a service argument restoring to last used service-args. This is set when enabling tracing to use the correct runtime override."
+            log "$log_message"
+            # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
+            echo "$log_message"
+            set_service_args "$(get_previous_service_args)"
+            exit 1
+            ;;
         *rpc-methods*)
             if is_tracing_enabled; then
                 log_message="rpc-methods is not allowed when tracing is enabled. Tracing requires unsafe rpc-methods which is set when tracing is enabled."
