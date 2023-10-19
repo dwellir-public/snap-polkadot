@@ -2,44 +2,189 @@
 
 BASE_PATH="$SNAP_COMMON/polkadot_base"
 SERVICE_ARGS_FILE="$SNAP_COMMON/service-arguments"
+DEFAULT_CHAIN="polkadot"
+
+# Logs to journalctl. Watch with e.g. journalctl -t SNAP_NAME -f
+log()
+{
+    logger -t ${SNAP_NAME} "$1"
+}
+
+restart_polkadot()
+{
+    snapctl restart polkadot
+}
+
+get_configured_chain()
+{
+    input_string="$1"
+    chain_value=""
+
+    # Use basic string manipulation to extract the value after "--chain"
+    rest_of_string="${input_string#*--chain=}"
+    if [ "$rest_of_string" = "$input_string" ]; then
+        rest_of_string="${input_string#*--chain }"
+    fi
+
+    if [ "$rest_of_string" != "$input_string" ]; then
+        chain_value="${rest_of_string%% *}"
+    else
+        log "No chain specified in service arg. Defaulting to $DEFAULT_CHAIN."
+        chain_value=$DEFAULT_CHAIN
+    fi
+    echo $chain_value
+}
+
+write_service_args_file()
+{
+    service_args="--base-path=$BASE_PATH $(get_service_args)"
+    if is_tracing_enabled; then
+        service_args="--base-path=$BASE_PATH --rpc-methods=unsafe --wasm-runtime-overrides=$SNAP/$(get_configured_chain)-runtime-with-traces/ $(get_service_args)"
+    fi
+    log "Writing \"$service_args\" to $SERVICE_ARGS_FILE"
+    echo "$service_args" > "$SERVICE_ARGS_FILE"
+}
+
+### SERVICE ARGS CONFIG ###
 
 set_service_args()
 {
     snapctl set service-args="$1"
+    set_previous_service_args "$1"
 }
 
 get_service_args()
 {
     service_args="$(snapctl get service-args)"
     if [ -z "$service_args" ]; then
-        logger -t ${SNAP_NAME} "Setting default service args"
+        log "Setting default service args"
         service_args="--name=$(hostname)"
         set_service_args $service_args
     fi
     echo "$service_args"
 }
 
+set_previous_service_args()
+{
+    snapctl set private.service-args="$1"
+}
+
+get_previous_service_args()
+{
+    snapctl get private.service-args
+}
+
+service_args_has_changed()
+{
+	[ "$(get_service_args)" != "$(get_previous_service_args)" ]
+}
+
 validate_service_args()
 {
     case "$1" in 
         *base-path*)
-            logger -t ${SNAP_NAME} "base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
-            echo "base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
-            service_args_from_file=$(cat "$SERVICE_ARGS_FILE")
-            set_service_args $service_args_from_file
+            log_message="base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead ${BASE_PATH}."
+            log "$log_message"
+            # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
+            echo "$log_message"
+            set_service_args "$(get_previous_service_args)"
             exit 1
+            ;;
+        *rpc-methods*)
+            if is_tracing_enabled; then
+                log_message="rpc-methods is not allowed when tracing is enabled. Tracing requires unsafe rpc-methods which is set when tracing is enabled."
+                log "$log_message"
+                # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
+                echo "$log_message"
+                set_service_args "$(get_previous_service_args)"
+                exit 1
+            fi
             ;;
         esac
 }
 
 handle_service_args_config()
 {
+    if ! service_args_has_changed; then
+        log "service-args value was not changed."
+		return 0
+	fi
+
     service_args="$(get_service_args)"
     validate_service_args "$service_args"
-    set_service_args $service_args
-    logger -t ${SNAP_NAME} "Writing --base-path=$BASE_PATH and $service_args to $SERVICE_ARGS_FILE"
-    echo "--base-path=$BASE_PATH $service_args" > "$SERVICE_ARGS_FILE"
-    snapctl restart ${SNAP_NAME}
+    set_service_args "$service_args"
+    write_service_args_file
+    restart_polkadot
 }
 
+### TRACING ENABLED CONFIG ###
+
+set_tracing_enabled()
+{
+    snapctl set tracing-enabled="$1"
+    set_previous_tracing_enabled "$1"
+}
+
+get_tracing_enabled()
+{
+    tracing_enabled="$(snapctl get tracing-enabled)"
+    if [ -z "$tracing_enabled" ]; then
+        log "Disabling tracing as default"
+        set_tracing_enabled "false"
+    fi
+    echo "$tracing_enabled"
+}
+
+is_tracing_enabled()
+{
+    [ "$(get_tracing_enabled)" = "true" ]
+}
+
+set_previous_tracing_enabled()
+{
+    snapctl set private.tracing-enabled="$1"
+}
+
+get_previous_tracing_enabled()
+{
+    snapctl get private.tracing-enabled
+}
+
+tracing_enabled_has_changed()
+{
+	[ "$(get_tracing_enabled)" != "$(get_previous_tracing_enabled)" ]
+}
+
+validate_tracing_enabled()
+{
+    if is_tracing_enabled; then
+        case "$(get_service_args)" in 
+        *rpc-methods*)
+            log_message="It is not allowed to enable tracing when rpc-methods is set in the service-args configuration. Tracing requires unsafe rpc-methods which is set when tracing is enabled."
+            log "$log_message"
+            # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
+            echo "$log_message"
+            set_tracing_enabled "$(get_previous_tracing_enabled)"
+            exit 1
+            ;;
+        esac
+    fi
+}
+
+handle_tracing_enabled_config()
+{
+    if ! tracing_enabled_has_changed; then
+        log "tracing-enabled value was not changed."
+		return 0
+	fi
+
+    tracing_enabled="$(get_tracing_enabled)"
+    validate_tracing_enabled
+    set_tracing_enabled "$tracing_enabled"
+    write_service_args_file
+    restart_polkadot
+}
+
+### HANDLE CONFIG CHANGED ###
 handle_service_args_config
+handle_tracing_enabled_config
