@@ -59,7 +59,8 @@ get_service_args()
     if [ -z "$service_args" ]; then
         log "Setting default service args"
         service_args="--name=$(hostname)"
-        set_service_args $service_args
+        # Don't use set_service_args() since it will not work when using snap unset
+        snapctl set service-args="$service_args"
     fi
     echo "$service_args"
 }
@@ -138,7 +139,8 @@ get_tracing_enabled()
     tracing_enabled="$(snapctl get tracing-enabled)"
     if [ -z "$tracing_enabled" ]; then
         log "Disabling tracing as default"
-        set_tracing_enabled "false"
+        # Don't use set_tracing_enabled() since it will not work when using snap unset
+        snapctl set tracing-enabled="false"
     fi
     echo "$tracing_enabled"
 }
