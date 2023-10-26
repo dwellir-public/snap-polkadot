@@ -36,7 +36,7 @@ The release to the edge is then:
 Arguments passed to the Polkadot service. Set and get with snap set/get polkadot service-args 
 
 * --name defaults to the systems hostname the first time the snap is installed.
-* --base-path is always set by the snap and is not allowed to be configured.
+* --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
 * --wasm-runtime-overrides is set when tracing is enabled and is not allowed to be configured.
 * --rpc-methods is not allowed to be set if tracing is enabled since tracing required the value to be true.
 
@@ -61,19 +61,3 @@ Is not allowed to be enabled if --rpc-methods is set in service-args since it ne
 ### Alternatively - use systemd
 
     $ sudo systemctl <stop|start> snap.polkadot.polkadot.service 
-
-## Running with custom runtime for tracing
-
-### Add custom startup params
-    $ echo "--name=Dwellir --wasm-runtime-overrides /snap/polkadot/current/polkadot-runtime-with-traces/" > /var/snap/polkadot/common/service-arguments
-
-### Testing tracing:
-    curl -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "state_traceBlock", \
-    "params": ["0xb246acf1adea1f801ce15c77a5fa7d8f2eb8fed466978bcee172cc02cf64e264", "pallet,frame,state", "", ""]}' http://localhost:9933/
-
-
-# Polkadot databases 
-
-Located in: 
-
-    $HOME/snap/polkadot/current/.local/share/polkadot/
