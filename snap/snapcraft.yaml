@@ -15,15 +15,27 @@ architectures:
 
 description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
-  See: https://github.com/paritytech/polkadot
+  See: https://github.com/paritytech/polkadot-sdk
 
   Maintained by Dwellir https://www.dwellir.com
 
+  Supported configuration options for the snap:
+  
+  service-args [default=--base-path=$SNAP_COMMON/polkadot_base --name=<hostname>]
+  For available arguemnts see https://github.com/paritytech/polkadot-sdk
+  The value set here will be passed to the Polkadot binary with a few exceptions listed below. 
+  * --name defaults to the systems hostname the first time the snap is installed.
+  * --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
+  * --wasm-runtime-overrides is set when tracing is enabled and is not allowed to be configured.
+  * --rpc-methods is not allowed to be set if tracing is enabled since tracing required the value to be true.
+
+  tracing-enabled [default=false]
+  If true tracing will be enabled on the Polkadot service. This means that service args --wasm-runtime-overrides will be set and point to the correct runtime overrides based on the running chain and that --rpc-methods will be set to true.
+  Is not allowed to be enabled if --rpc-methods is set in service-args since it needs to be true for tracing to work.
+
   Start the service with 'sudo snap start polkadot'
 
-  Modify startup arguments in /var/snap/polkadot/common/service-arguments
-
-  Check logs with 'snap logs polkadot -f'
+  Check logs from the Polkadot service with 'snap logs polkadot -f'
 
 parts:
 
