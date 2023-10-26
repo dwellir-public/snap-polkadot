@@ -89,6 +89,13 @@ parts:
     source: .
     stage:
       - wrappers/
+  
+  utils:
+      plugin: dump
+      source-type: local
+      source: .
+      stage:
+        - utils/
 
 apps:
   polkadot:
