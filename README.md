@@ -46,6 +46,13 @@ If true tracing will be enabled on the Polkadot service. This means that service
 
 Is not allowed to be enabled if --rpc-methods is set in service-args since it needs to be true for tracing to work.
 
+#### endure
+
+If true the Polkadot service will not be restarted after a snap refresh.
+Note that the Polkadot service will still be restarted as the result of changing service-args, tracing-enabled, etc.
+
+This is reccomended when running a validator since it can be sensitive for a validator to go offline.
+
 ### Start the service
 
     $ sudo snap start polkadot

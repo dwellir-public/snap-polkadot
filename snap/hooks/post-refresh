@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. "$SNAP/utils/utils.sh"
+. "$SNAP/utils/endure-utils.sh"
+
+if ! endure; then
+    log "Restarting polkadot after a refresh."
+    restart_polkadot
+fi

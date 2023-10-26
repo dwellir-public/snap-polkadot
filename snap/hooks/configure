@@ -3,6 +3,7 @@
 . "$SNAP/utils/utils.sh"
 . "$SNAP/utils/service-args-utils.sh"
 . "$SNAP/utils/tracing-enabled-utils.sh"
+. "$SNAP/utils/endure-utils.sh"
 
 handle_service_args_config()
 {
@@ -32,6 +33,17 @@ handle_tracing_enabled_config()
     restart_polkadot
 }
 
-### HANDLE CONFIG CHANGED ###
+handle_endure_config()
+{
+    if ! endure_has_changed; then
+        log "endure value was not changed."
+		return 0
+	fi
+
+    endure="$(get_endure)"
+    set_endure "$endure"
+}
+
 handle_service_args_config
 handle_tracing_enabled_config
+handle_endure_config
