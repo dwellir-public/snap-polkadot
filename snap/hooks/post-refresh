@@ -2,6 +2,10 @@
 
 . "$SNAP/utils/utils.sh"
 . "$SNAP/utils/endure-utils.sh"
+. "$SNAP/utils/service-args-utils.sh"
+
+# Write to service args file to apply any effects from code changes
+write_service_args_file
 
 if ! endure; then
     log "Restarting polkadot after a refresh."
