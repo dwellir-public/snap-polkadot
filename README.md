@@ -2,8 +2,6 @@
 
 Basically the polkadot service built as a snap.
 
-It ships with custom runtimes for tracing.
-
 ## Building the snap
 Clone the repo, then build with snapcraft
 
@@ -37,19 +35,11 @@ Arguments passed to the Polkadot service. Set and get with snap set/get polkadot
 
 * --name defaults to the systems hostname the first time the snap is installed.
 * --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
-* --wasm-runtime-overrides is set when tracing is enabled and is not allowed to be configured.
-* --rpc-methods is not allowed to be set if tracing is enabled since tracing required the value to be true.
-
-#### tracing-enabled
-
-If true tracing will be enabled on the Polkadot service. This means that service args --wasm-runtime-overrides will be set and point to the correct runtime overrides based on the running chain and that --rpc-methods will be set to true.
-
-Is not allowed to be enabled if --rpc-methods is set in service-args since it needs to be true for tracing to work.
 
 #### endure
 
 If true the Polkadot service will not be restarted after a snap refresh.
-Note that the Polkadot service will still be restarted as the result of changing service-args, tracing-enabled, etc.
+Note that the Polkadot service will still be restarted as the result of changing service-args, etc.
 
 This is reccomended when running a validator since it can be sensitive for a validator to go offline.
 

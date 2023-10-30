@@ -2,6 +2,16 @@
 
 . "$SNAP/utils/utils.sh"
 
+BASE_PATH="$SNAP_COMMON/polkadot_base"
+SERVICE_ARGS_FILE="$SNAP_COMMON/service-arguments"
+
+write_service_args_file()
+{
+    service_args="--base-path=$BASE_PATH $(get_service_args)"
+    log "Writing \"$service_args\" to $SERVICE_ARGS_FILE"
+    echo "$service_args" > "$SERVICE_ARGS_FILE"
+}
+
 set_service_args()
 {
     snapctl set service-args="$1"
@@ -45,24 +55,6 @@ validate_service_args()
             echo "$log_message"
             set_service_args "$(get_previous_service_args)"
             exit 1
-            ;;
-        *wasm-runtime-overrides*)
-            log_message="wasm-runtime-overrides is not allowed to pass as a service argument restoring to last used service-args. This is set when enabling tracing to use the correct runtime override."
-            log "$log_message"
-            # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
-            echo "$log_message"
-            set_service_args "$(get_previous_service_args)"
-            exit 1
-            ;;
-        *rpc-methods*)
-            if is_tracing_enabled; then
-                log_message="rpc-methods is not allowed when tracing is enabled. Tracing requires unsafe rpc-methods which is set when tracing is enabled."
-                log "$log_message"
-                # Echo will be visible for a user if the configure hook fails when calling e.g. snap set SNAP_NAME service-args
-                echo "$log_message"
-                set_service_args "$(get_previous_service_args)"
-                exit 1
-            fi
             ;;
         esac
 }
