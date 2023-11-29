@@ -33,24 +33,21 @@ description: |
 
 parts:
 
-  install-wasm-toolchain:
+  rust-deps:
     plugin: nil
-    override-build: |
-      rustup default stable
+    build-packages:
+     - curl
+    override-pull: |
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      source "$HOME/.cargo/env"
       rustup target add wasm32-unknown-unknown
-      rustup update
-      cargo install wasm-pack --version 0.11.1
 
   polkadot:
-    after: [install-wasm-toolchain]
+    after: [rust-deps]
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
     source-tag: polkadot-v1.1.0
     source-depth: 1
-    build-environment:
-      - CARGO_PROFILE_RELEASE_BUILD_OVERRIDE: "--release"
-      - RUSTUP_TOOLCHAIN: stable
-      - RUSTUP_TARGET: wasm32-unknown-unknown
     build-packages:
       - build-essential
       - libssl-dev
@@ -59,9 +56,6 @@ parts:
       - libclang-dev 
       - pkg-config
       - protobuf-compiler
-      # -curl      
-    build-snaps:
-      - rustup
     # Make the commit hash available for snap info
     override-pull: |
       craftctl default
@@ -69,9 +63,8 @@ parts:
     rust-path:
       - polkadot/
     override-build: |
-      # TODO according to the readme in the polkadot repo init.sh plus build-packages should be enough before building but we need the steps in install-wasm-toolchain as well for some reason.
       ./polkadot/scripts/init.sh
-      # Build main binary using default function of plugin (like calling super)
+      # Build main binary(s) using default function of plugin (like calling super)
       craftctl default
     prime:
       - bin/polkadot
