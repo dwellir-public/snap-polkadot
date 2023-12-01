@@ -46,7 +46,7 @@ parts:
     after: [rust-deps]
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-v1.1.0
+    source-tag: polkadot-v1.2.0
     source-depth: 1
     build-packages:
       - build-essential
@@ -62,10 +62,6 @@ parts:
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
     rust-path:
       - polkadot/
-    override-build: |
-      ./polkadot/scripts/init.sh
-      # Build main binary(s) using default function of plugin (like calling super)
-      craftctl default
     prime:
       - bin/polkadot
       - bin/polkadot-execute-worker
