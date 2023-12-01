@@ -4,11 +4,13 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3
     - uses: snapcore/action-build@v1
       id: snapcraft
+      with:
+        snapcraft-args: --destructive-mode --verbose
     - uses: actions/upload-artifact@v3
       with:
         name: snap
