@@ -6,10 +6,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: snapcore/action-build@v1
+    - name: Checkout repo
+      uses: actions/checkout@v3
+    - name: Build Polkadot snap
+      uses: snapcore/action-build@v1
       id: snapcraft
-    - uses: actions/upload-artifact@v3
+    - name: Save Polkadot snap
+      uses: actions/upload-artifact@v3
       with:
         name: snap
         path: ${{ steps.snapcraft.outputs.snap }}
@@ -19,7 +22,23 @@ jobs:
       with:
         name: log
         path: /home/runner/.local/state/snapcraft/log/snapcraft-*.log
-  # test:
-  #   runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install and start Polkadot snap
+      run: sudo snap install ${{ steps.snapcraft.outputs.snap }} --devmode
+      run: sudo snap set polkadot service-args="--rpc-port=9933"
+      run: sudo snap start polkadot
+    - name: Check installed version
+      uses: indiesdev/curl@v1.1
+      with:
+        url: http://localhost:9933
+        method: "POST"
+        headers: '{ "Content-Type": "application/json" }'
+        body: '{"id":1, "jsonrpc":"2.0", "method": "system_version"}'
+        log-response: true
+      run: 
+
+
   # publish:
   #   runs-on: ubuntu-latest
