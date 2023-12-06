@@ -1,0 +1,71 @@
+# Preparations before running tests
+
+Make sure to run the tests in a container or to run `sudo snap remove polkadot --purge` before running tests to have a clean environment.
+
+Keep a terminal window open with the logs during the tests using `sudo snap logs polkadot -f`
+
+### Check node status
+The following steps will be referenced through out this document with `Check node status`.
+
+| Steps                                 | Command                                                                                                                               | Expected result |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------------|
+| Check running version with RPC method | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_version"}' http://localhost:9933`   | The curl result should show the same version as is shown for the installed snap by running `snap info polkdaot` |
+| Check node health                     | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_health"}' http://localhost:9933`    | The curl result should show that the node has peers and is syncing |
+| Check sync state                      | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_syncState"}' http://localhost:9933` | Run the curl command twice with a short time between and check that the current block is increased |
+
+# Edge tests
+| Steps                                   | Command                                                                                                             | Expected result |
+|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------|-----------------|
+| Install the Polkadot snap               | sudo snap install polkadot channel=edge                                                                             |                 |
+| Start Polkadot                          | sudo snap start polkadot                                                                                            |                 |
+| Set --rpc-port in service-args          | `sudo snap set polkadot service-args="--name=testing --rpc-port=9933 --prometheus-port=9900 --prometheus-external"` | Check logs that Polkadot service was restarted and the new service-args where applied |
+| [Check node status](#Check-node-status) | See steps above                                                                                                     |                 |
+
+# Beta tests
+
+# Candidate tests
+
+# Stable tests
+
+### Test initial installation
+
+| Steps                                   | Command                                                                                                             | Expected result |
+|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------|-----------------|
+| Install the Polkadot snap               | `sudo snap install polkadot channel=candidate`                                                                      |                 |
+| Start Polkadot                          | `sudo snap start polkadot`                                                                                          | Logs appears in log terminal |
+| Set --rpc-port in service-args          | `sudo snap set polkadot service-args="--name=testing --rpc-port=9933 --prometheus-port=9900 --prometheus-external"` | Check logs that Polkadot service was restarted and the new service-args where applied |
+| [Check node status](#Check-node-status) | See steps above                                                                                                     |                 |
+
+
+
+### Test setting --base-path
+
+| Steps                                  | Command                                                                                                                         | Expected result |
+|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|-----------------|
+| Set --base-path in service-args config | `sudo snap set polkadot service-args="--name=testing --rpc-port=9933 --prometheus-port=9900 --prometheus-external --base-path"` | The following should be presented in the terminal: error: cannot perform the following tasks: Run configure hook of "polkadot" snap (run hook "configure": base-path is not allowed to pass as a service argument restoring to last used service-args. This path is alywas used instead /var/snap/polkadot/common/polkadot_base.) |
+
+### Test downgrade
+
+| Steps                                   | Command                                                      | Expected result |
+|-----------------------------------------|--------------------------------------------------------------|-----------------|
+| Get previous revision                   | `snap info polkadot`                                         | The revision is between parentheses. Check the installed one and subtract one |
+| Downgrade the Polkadot snap             | `sudo snap refresh polkadot --revision=<previous-revisison>` |                 |
+| [Check node status](#Check-node-status) | See steps above                                              |                 |
+
+### Test endure
+
+| Steps                                   | Command                                                                                                                             | Expected result |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|-----------------|
+| Upgrade to latest version               | `sudo snap refresh polkadot`                                                                                                        |                 |
+| [Check node status](#Check-node-status) | See steps above                                                                                                                     |                 |
+| Enable endure config                    | `sudo snap set polkadot endure=true`                                                                                                |                 |
+| Downgrade the Polkadot snap             | `sudo snap refresh polkadot --revision=<previous-revisison>`                                                                        | Check in the logs that the service didn't restart |
+| Check running version with RPC method   | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_version"}' http://localhost:9933` | The curl result should __NOT__ show the same version as is shown for the installed snap by running `snap info polkdaot` |
+| Restart the service                     | `sudo snap restart polkadot`                                                                                                        | 
+| Check running version with RPC method   | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_version"}' http://localhost:9933` | The curl result should show the same version as is shown for the installed snap by running `snap info polkdaot` |
+
+### Test Kusama, Westend and Rococo
+
+For each of Kusama, Westend and Rococo
+1. Clean the environment as described in the [preparation section](#preparations-before-running-tests)
+1. Run [edge tests](#edge-tests)
