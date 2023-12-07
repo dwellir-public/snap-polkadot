@@ -12,14 +12,17 @@ The following steps will be referenced through out this document with `Check nod
 | Check running version with RPC method | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_version"}' http://localhost:9933`   | The curl result should show the same version as is shown for the installed snap by running `snap info polkdaot` |
 | Check node health                     | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_health"}' http://localhost:9933`    | The curl result should show that the node has peers and is syncing |
 | Check sync state                      | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_syncState"}' http://localhost:9933` | Run the curl command twice with a short time between and check that the current block is increased |
+| Check sync state                      | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_chain"}' http://localhost:9933`     | The curl result should show the configured chain (Polkadot if not specified in service-args) |
+
+Note: there is a utility script called [check_node_status.py](check_node_status.py) that can be used when running it on the same machine as the snap runs on.
 
 # Edge tests
-| Steps                                   | Command                                                                                                             | Expected result |
-|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------|-----------------|
-| Install the Polkadot snap               | sudo snap install polkadot channel=edge                                                                             |                 |
-| Start Polkadot                          | sudo snap start polkadot                                                                                            |                 |
+| Steps                                   | Command                                                                                                                             | Expected result |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|-----------------|
+| Install the Polkadot snap               | `sudo snap install polkadot --channel=edge`                                                                                         |                 |
 | Set --rpc-port in service-args          | `sudo snap set polkadot service-args="--name=testing --rpc-port=9933 --prometheus-port=9900 --prometheus-external"` | Check logs that Polkadot service was restarted and the new service-args where applied |
-| [Check node status](#Check-node-status) | See steps above                                                                                                     |                 |
+| Start Polkadot                          | `sudo snap start polkadot`                                                                                                          |                 |
+| [Check node status](#Check-node-status) | See steps above                                                                                                                     |                 |
 
 # Beta tests
 
@@ -29,12 +32,13 @@ The following steps will be referenced through out this document with `Check nod
 
 ### Test initial installation
 
-| Steps                                   | Command                                                                                                             | Expected result |
-|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------|-----------------|
-| Install the Polkadot snap               | `sudo snap install polkadot channel=candidate`                                                                      |                 |
-| Start Polkadot                          | `sudo snap start polkadot`                                                                                          | Logs appears in log terminal |
-| Set --rpc-port in service-args          | `sudo snap set polkadot service-args="--name=testing --rpc-port=9933 --prometheus-port=9900 --prometheus-external"` | Check logs that Polkadot service was restarted and the new service-args where applied |
-| [Check node status](#Check-node-status) | See steps above                                                                                                     |                 |
+| Steps                                   | Command                                                                                                                             | Expected result |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|-----------------|
+| Install the Polkadot snap               | `sudo snap install polkadot --channel=candidate`                                                                                    |                 |
+| Set --rpc-port in service-args          | `sudo snap set polkadot service-args="--name=testing --chain=<chain>"`                                                              |                 |
+| Start Polkadot                          | `sudo snap start polkadot`                                                                                                          | Logs appear in log terminal |
+| Set --rpc-port in service-args          | `sudo snap set polkadot service-args="--name=testing --chain=<chain> --rpc-port=9933 --prometheus-port=9900 --prometheus-external"` | Check logs that Polkadot service was restarted and the new service-args where applied |
+| [Check node status](#Check-node-status) | See steps above                                                                                                                     |                 |
 
 
 
@@ -68,4 +72,4 @@ The following steps will be referenced through out this document with `Check nod
 
 For each of Kusama, Westend and Rococo
 1. Clean the environment as described in the [preparation section](#preparations-before-running-tests)
-1. Run [edge tests](#edge-tests)
+1. Run [edge tests](#test-initial-installation)
