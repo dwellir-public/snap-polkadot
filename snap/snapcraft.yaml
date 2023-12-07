@@ -1,8 +1,10 @@
 name: polkadot
+title: Polkadot
 base: core22
 adopt-info: polkadot
 summary: Polkadot - A multi-chain framework for better blockchain interoperability
-contact: polkadot-devel@dwellir.com
+license: GPL-3.0-with-GCC-exception
+contact: info@dwellir.com
 issues: https://github.com/dwellir-public/snap-polkadot/issues
 source-code: https://github.com/dwellir-public/snap-polkadot/
 website: https://www.dwellir.com
@@ -11,13 +13,14 @@ confinement: strict
 
 architectures:
   - amd64
-  - arm64
 
 description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
   See: https://github.com/paritytech/polkadot-sdk
 
-  Maintained by Dwellir https://www.dwellir.com
+  Start the service with 'sudo snap start polkadot'
+
+  Check logs from the Polkadot service with 'snap logs polkadot -f'
 
   Supported configuration options for the snap:
   
@@ -27,9 +30,11 @@ description: |
   * --name defaults to the systems hostname the first time the snap is installed.
   * --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
 
-  Start the service with 'sudo snap start polkadot'
+  endure [default=false]
+  If true the Polkadot service will not be restarted after a snap refresh.
+  Note that the Polkadot service will still be restarted as the result of changing service-args, etc.
 
-  Check logs from the Polkadot service with 'snap logs polkadot -f'
+  Use this when restarts should be avoided e.g. when running a validator.
 
 parts:
 
