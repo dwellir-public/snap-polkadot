@@ -20,8 +20,12 @@ To promote further follow the instructions in [this document](TESTING.md)
 Promoting can be done either from [this webpage](https://snapcraft.io/polkadot/publicise)
 or by running
 `snapcraft release polkadot <revision> <channel>`
-    
-### Install snap
+
+## Hardware requirements
+
+See https://wiki.polkadot.network/docs/maintain-guides-how-to-validate-polkadot#standard-hardware
+
+## Install snap
 
 `sudo snap install <snap-file> --devmode`
 or from snap store

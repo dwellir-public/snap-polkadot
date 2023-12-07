@@ -17,6 +17,8 @@ architectures:
 description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
   See: https://github.com/paritytech/polkadot-sdk
+  
+  Hardware requirements can be found here: https://wiki.polkadot.network/docs/maintain-guides-how-to-validate-polkadot#standard-hardware
 
   Start the service with 'sudo snap start polkadot'
 
