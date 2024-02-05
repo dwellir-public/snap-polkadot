@@ -55,7 +55,7 @@ parts:
     after: [rust-deps]
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-v1.5.0
+    source-tag: polkadot-v1.6.0
     source-depth: 1
     build-packages:
       - build-essential
