@@ -12,6 +12,10 @@ cd snap-polkadot
 snapcraft pack --use-lxd --debug --verbosity=debug # Takes some time.
 ```
 
+## Upgrading Polkadot version
+
+Simply change the version number here: https://github.com/dwellir-public/snap-polkadot/blob/main/snap/snapcraft.yaml#L58 and then of course rebuild.
+
 ## Releasing
 
 When a commit is made to the main branch a build will start in launchpad and if successful release to the edge channel.
@@ -20,7 +24,7 @@ To promote further follow the instructions in [this document](TESTING.md)
 Promoting can be done either from [this webpage](https://snapcraft.io/polkadot/publicise)
 or by running
 `snapcraft release polkadot <revision> <channel>`
-    
+
 ### Install snap
 
 `sudo snap install <snap-file> --devmode`
@@ -37,6 +41,10 @@ For available arguments see https://github.com/paritytech/polkadot-sdk
 The value set here will be passed to the Polkadot binary with a few exceptions listed below. 
 * --name defaults to the systems hostname the first time the snap is installed.
 * --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
+
+Example:
+
+    sudo snap set polkadot service-args="--name=my-westend-node --chain=westend"
 
 #### endure
 
