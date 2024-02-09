@@ -21,7 +21,7 @@ Simply change the version number here: https://github.com/dwellir-public/snap-po
 When a commit is made to the main branch a build will start in launchpad and if successful release to the edge channel.
 To promote further follow the instructions in [this document](TESTING.md)
 
-Promoting can be done either from [this webpage](https://snapcraft.io/polkadot/publicise)
+Promoting can be done either from [this webpage](https://snapcraft.io/polkadot/releases)
 or by running
 `snapcraft release polkadot <revision> <channel>`
 
