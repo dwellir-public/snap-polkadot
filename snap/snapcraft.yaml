@@ -47,13 +47,19 @@ parts:
     override-pull: |
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       source "$HOME/.cargo/env"
+      rustup default stable
+      rustup update
       rustup target add wasm32-unknown-unknown
+      rustup component add rust-src
+      rustup update nightly
+      rustup target add wasm32-unknown-unknown --toolchain nightly
+      rustup component add rust-src --toolchain nightly
 
   polkadot:
     after: [rust-deps]
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-v1.4.0
+    source-tag: polkadot-v1.7.0
     source-depth: 1
     build-packages:
       - build-essential
