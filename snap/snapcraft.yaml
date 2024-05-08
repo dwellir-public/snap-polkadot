@@ -39,25 +39,7 @@ description: |
   Use this when restarts should be avoided e.g. when running a validator.
 
 parts:
-
-  rust-deps:
-    plugin: nil
-    build-packages:
-     - curl
-    override-pull: |
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      source "$HOME/.cargo/env"
-      rustup default stable
-      rustup update
-      rustup install nightly
-      rustup target add wasm32-unknown-unknown
-      rustup component add rust-src
-      rustup update nightly
-      rustup target add wasm32-unknown-unknown --toolchain nightly
-      rustup component add rust-src --toolchain nightly
-
   polkadot:
-    after: [rust-deps]
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
     source-tag: polkadot-v1.11.0
@@ -74,6 +56,13 @@ parts:
     override-pull: |
       craftctl default
       craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
+      rustup default stable
+      rustup update
+      rustup target add wasm32-unknown-unknown
+      rustup component add rust-src
+      rustup update nightly
+      rustup target add wasm32-unknown-unknown --toolchain nightly
+      rustup component add rust-src --toolchain nightly
     rust-path:
       - polkadot/
     prime:
