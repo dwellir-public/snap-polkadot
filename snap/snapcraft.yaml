@@ -55,7 +55,7 @@ parts:
     # Make the commit hash available for snap info
     override-pull: |
       craftctl default
-      craftctl set version="v1.13.0-$(git rev-parse --short HEAD)"
+      craftctl set version="1.13.0-$(git rev-parse --short HEAD)"
       # craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
       rustup default stable
       rustup update
