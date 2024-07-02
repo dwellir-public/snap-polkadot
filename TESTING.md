@@ -68,7 +68,7 @@ Note: there is a utility script called [check_node_status.py](check_node_status.
 | Restart the service                     | `sudo snap restart polkadot`                                                                                                        | 
 | Check running version with RPC method   | `curl -X POST -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_version"}' http://localhost:9933` | The curl result should show the same version as is shown for the installed snap by running `snap info polkdaot` |
 
-### Test Kusama, Westend and Rococo
+### Test Kusama, Paseo Testnet, Westend and Rococo
 
 For each of Kusama, Westend and Rococo
 1. Clean the environment as described in the [preparation section](#preparations-before-running-tests)
