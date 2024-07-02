@@ -38,6 +38,10 @@ description: |
 
   Use this when restarts should be avoided e.g. when running a validator.
 
+  Example config for running on Polkadot with an RPC endpoint on port 9933:
+
+  sudo snap set polkadot service-args="--name=foobar --chain=polkadot --rpc-port=9933"
+
 parts:
   polkadot:
     plugin: rust
