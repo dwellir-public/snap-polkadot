@@ -3,7 +3,7 @@
 # Logs to journalctl. Watch with e.g. journalctl -t SNAP_NAME -f
 log()
 {
-    logger -t ${SNAP_NAME} "$1"
+    logger -t ${SNAP_NAME} -- "$1"
 }
 
 restart_polkadot()
