@@ -1,6 +1,6 @@
 name: polkadot
 title: Polkadot
-base: core22
+base: core24
 adopt-info: polkadot
 summary: Polkadot - A multi-chain framework for better blockchain interoperability
 license: GPL-3.0-with-GCC-exception
@@ -11,8 +11,8 @@ website: https://www.dwellir.com
 grade: stable
 confinement: strict
 
-architectures:
-  - amd64
+platforms:
+  amd64:
 
 description: |
   Polkadot is a multi-chain framework that enables interoperability and scalability for multiple blockchains.
