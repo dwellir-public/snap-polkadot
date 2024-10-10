@@ -46,7 +46,7 @@ parts:
   polkadot:
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-stable2407-2
+    source-tag: polkadot-stable2409
     source-depth: 1
     build-packages:
       - build-essential
@@ -59,7 +59,7 @@ parts:
     # Make the commit hash available for snap info
     override-pull: |
       craftctl default
-      craftctl set version="polkadot-stable2407-2-$(git rev-parse --short HEAD)"
+      craftctl set version="polkadot-stable2409-$(git rev-parse --short HEAD)"
       # craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
       rustup default stable
       rustup update
