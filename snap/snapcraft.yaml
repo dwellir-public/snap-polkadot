@@ -65,9 +65,6 @@ parts:
       rustup update nightly
       rustup target add wasm32-unknown-unknown --toolchain nightly
       rustup component add rust-src --toolchain nightly
-      
-      # Update time for v1.14.1 to build. May be removed later.
-      # cargo update -p time
       craftctl default
       craftctl set version="polkadot-stable2503-$(git rev-parse --short HEAD)"
     rust-path:
