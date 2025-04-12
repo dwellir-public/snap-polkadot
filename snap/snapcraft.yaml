@@ -46,7 +46,7 @@ parts:
   polkadot:
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-stable2412-2
+    source-tag: polkadot-stable2503
     source-depth: 1
     build-packages:
       - build-essential
@@ -58,11 +58,8 @@ parts:
       - protobuf-compiler
     # Make the commit hash available for snap info
     override-pull: |
-      craftctl default
-      craftctl set version="polkadot-stable2412-2-$(git rev-parse --short HEAD)"
-      # craftctl set version="$(git describe --tags --abbrev=10)-$(git rev-parse --short HEAD)"
+      rustup install stable
       rustup default stable
-      rustup update
       rustup target add wasm32-unknown-unknown
       rustup component add rust-src
       rustup update nightly
@@ -70,7 +67,9 @@ parts:
       rustup component add rust-src --toolchain nightly
       
       # Update time for v1.14.1 to build. May be removed later.
-      cargo update -p time
+      # cargo update -p time
+      craftctl default
+      craftctl set version="polkadot-stable2503-$(git rev-parse --short HEAD)"
     rust-path:
       - polkadot/
     prime:
