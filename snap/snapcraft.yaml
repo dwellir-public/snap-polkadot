@@ -46,7 +46,7 @@ parts:
   polkadot:
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-stable2503
+    source-tag: polkadot-stable2506
     source-depth: 1
     build-packages:
       - build-essential
@@ -66,7 +66,7 @@ parts:
       rustup target add wasm32-unknown-unknown --toolchain nightly
       rustup component add rust-src --toolchain nightly
       craftctl default
-      craftctl set version="polkadot-stable2503-$(git rev-parse --short HEAD)"
+      craftctl set version="polkadot-stable2506-$(git rev-parse --short HEAD)"
     rust-path:
       - polkadot/
     prime:
