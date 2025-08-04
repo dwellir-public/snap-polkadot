@@ -73,3 +73,14 @@ Note: there is a utility script called [check_node_status.py](check_node_status.
 For each of Kusama, Westend and Rococo
 1. Clean the environment as described in the [preparation section](#preparations-before-running-tests)
 1. Run [edge tests](#test-initial-installation)
+
+
+### Testing with snapstore
+
+If you need to test stuff related to snapstore you can use the following steps:
+
+1. Upload to a branch (lives for 30 days)
+   snapcraft upload <snap>
+   snapcraft release <rev> channel latest/edge/my-tests
+
+2. sudo snap install snap --channel latest/edge/my-tests

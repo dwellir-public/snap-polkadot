@@ -37,5 +37,3 @@ check_polkadot_service_running() {
         return 1
     fi
 }
-
-

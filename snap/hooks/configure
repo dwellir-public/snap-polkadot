@@ -15,7 +15,7 @@ handle_service_args_config()
     validate_service_args "$service_args"
     set_service_args "$service_args"
     write_service_args_file
-    restart_polkadot
+    # restart_polkadot
 }
 
 handle_endure_config()

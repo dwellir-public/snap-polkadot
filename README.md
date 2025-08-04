@@ -39,25 +39,43 @@ or from snap store
 
 #### service-args
 
-default=--base-path=$SNAP_COMMON/polkadot_base --name=<hostname>
+```sudo snap set polkadot service-args="<my service args>"```
 
 For available arguments see https://github.com/paritytech/polkadot-sdk
-The value set here will be passed to the Polkadot binary with a few exceptions listed below. 
-* --name defaults to the systems hostname the first time the snap is installed.
-* --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
 
 Example:
 
-    sudo snap set polkadot service-args="--name=my-westend-node --chain=westend"
+```
+sudo snap set polkadot service-args="--base-path=/var/snap/polkadot/common/polkadot_base \
+--name DWELLIR-NODE \
+--chain kusama \
+--prometheus-external \
+--pruning archive \
+--rpc-external \
+--rpc-port=9933 \
+--rpc-cors all \
+--rpc-methods Safe \
+--rpc-max-connections=1000"
+```
 
 #### endure
 
-default=false
+```sudo snap set polkadot endure=true|false```
 
 If true the Polkadot service will not be restarted after a snap refresh.
 Note that the Polkadot service will still be restarted as the result of changing service-args, etc.
 
 Use this when restarts should be avoided e.g. when running a validator.
+
+#### Changing base-path outside of the SNAP_COMMON directory
+Setting an alternative base-path can be done by connecting the snap removable-media interface This allows the snap to access external filsystems/dirs (see: snap interface removable-media)
+
+    sudo snap connect polkadot:removable-media
+
+Configure your startup parameters (written to /var/snap/polkadot/common/service-arguments). 
+
+    sudo snap set polkadot service-args='--base-path /mnt/polkadot/'
+
 
 ### Start the service
 
