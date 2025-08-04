@@ -11,6 +11,7 @@ website: https://www.dwellir.com
 grade: stable
 confinement: strict
 
+
 platforms:
   amd64:
 
@@ -56,7 +57,6 @@ parts:
       - libclang-dev 
       - pkg-config
       - protobuf-compiler
-    # Make the commit hash available for snap info
     override-pull: |
       rustup install stable
       rustup default stable
@@ -94,13 +94,22 @@ apps:
     daemon: simple
     install-mode: disable
     refresh-mode: endure
-    restart-condition: never
+    restart-condition: on-failure
     plugs:
       - network
       - network-bind
+      - removable-media
+      - system-observe
+      - hardware-observe
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
 
   polkadot-cli:
     command: bin/polkadot
+    plugs:
+      - network
+      - home
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8

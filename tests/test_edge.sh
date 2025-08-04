@@ -22,4 +22,3 @@ sleep 20
 # Check node status using the Python script
 echo "Running node status tests..."
 python3 check_node_status.py
-

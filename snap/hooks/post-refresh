@@ -1,13 +1,12 @@
 #!/bin/sh
 
 . "$SNAP/utils/utils.sh"
-. "$SNAP/utils/endure-utils.sh"
-. "$SNAP/utils/service-args-utils.sh"
+. "$SNAP/utils/endure-utils.sh" 
 
-# Write to service args file to apply any effects from code changes
-write_service_args_file
-
-if ! endure; then
-    log "Restarting polkadot after a refresh."
-    restart_polkadot
+if [ $(get_endure) = "true" ]; then
+    log "Endure is enabled, not restarting service."
+    exit 0
+else
+    log "Endure is disabled, restarting service."
+    snapctl restart polkadot
 fi
