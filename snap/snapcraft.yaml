@@ -67,12 +67,28 @@ parts:
       rustup component add rust-src --toolchain nightly
       craftctl default
       craftctl set version="polkadot-stable2506-1-$(git rev-parse --short HEAD)"
+    
+    override-build: |
+      set -eux
+      # Build the relay-chain node AND its worker binaries
+      cargo build --release -p polkadot --bins
+      # Build the parachain node (package is 'polkadot-parachain-bin', output binary is 'polkadot-parachain')
+      cargo build --release -p polkadot-parachain-bin
+
+      # Install binaries into the part install dir so they can be staged/primed
+      install -Dm755 target/release/polkadot                    "$CRAFT_PART_INSTALL/bin/polkadot"
+      install -Dm755 target/release/polkadot-execute-worker     "$CRAFT_PART_INSTALL/bin/polkadot-execute-worker"
+      install -Dm755 target/release/polkadot-prepare-worker     "$CRAFT_PART_INSTALL/bin/polkadot-prepare-worker"
+      install -Dm755 target/release/polkadot-parachain          "$CRAFT_PART_INSTALL/bin/polkadot-parachain"
+
     rust-path:
       - polkadot/
+
     prime:
       - bin/polkadot
       - bin/polkadot-execute-worker
       - bin/polkadot-prepare-worker
+      - bin/polkadot-parachain
 
   wrappers:
     plugin: dump
@@ -113,3 +129,17 @@ apps:
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
+
+  polkadot-parachain:                 # NEW: separate daemon for parachain
+    command: wrappers/start-polkadot-parachain.bash
+    daemon: simple
+    install-mode: disable
+    refresh-mode: endure
+    restart-condition: on-failure
+    plugs: [network, network-bind, removable-media, system-observe, hardware-observe]
+    environment: { LC_ALL: C.UTF-8, LANG: C.UTF-8 }
+
+  polkadot-parachain-cli:             # NEW: direct CLI access to parachain
+    command: bin/polkadot-parachain
+    plugs: [network, home]
+    environment: { LC_ALL: C.UTF-8, LANG: C.UTF-8 }
