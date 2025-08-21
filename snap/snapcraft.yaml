@@ -58,28 +58,26 @@ parts:
       - pkg-config
       - protobuf-compiler
     override-pull: |
-      rustup install stable
+      rustup install stable --profile=minimal
       rustup default stable
-      rustup target add wasm32-unknown-unknown
-      rustup component add rust-src
-      rustup update nightly
-      rustup target add wasm32-unknown-unknown --toolchain nightly
-      rustup component add rust-src --toolchain nightly
+      rustup target add wasm32-unknown-unknown wasm32v1-none
       craftctl default
       craftctl set version="polkadot-stable2506-1-$(git rev-parse --short HEAD)"
     
     override-build: |
       set -eux
-      # Build the relay-chain node AND its worker binaries
-      cargo build --release -p polkadot --bins
-      # Build the parachain node (package is 'polkadot-parachain-bin', output binary is 'polkadot-parachain')
-      cargo build --release -p polkadot-parachain-bin
+      # Build the relay-chain node AND its worker binaries, use the production profile
+      # Mimics exactly the upstream build
+      cargo +stable build --profile=production --locked -p polkadot --bins
+      # Build the parachain node (package is 'polkadot-parachain-bin', output binary is 'polkadot-parachain'), use the production profile
+      # Mimics exactly the upstream build
+      cargo +stable build --profile=production --locked -p polkadot-parachain-bin
 
       # Install binaries into the part install dir so they can be staged/primed
-      install -Dm755 target/release/polkadot                    "$CRAFT_PART_INSTALL/bin/polkadot"
-      install -Dm755 target/release/polkadot-execute-worker     "$CRAFT_PART_INSTALL/bin/polkadot-execute-worker"
-      install -Dm755 target/release/polkadot-prepare-worker     "$CRAFT_PART_INSTALL/bin/polkadot-prepare-worker"
-      install -Dm755 target/release/polkadot-parachain          "$CRAFT_PART_INSTALL/bin/polkadot-parachain"
+      install -Dm755 target/production/polkadot                    "$CRAFT_PART_INSTALL/bin/polkadot"
+      install -Dm755 target/production/polkadot-execute-worker    "$CRAFT_PART_INSTALL/bin/polkadot-execute-worker"
+      install -Dm755 target/production/polkadot-prepare-worker     "$CRAFT_PART_INSTALL/bin/polkadot-prepare-worker"
+      install -Dm755 target/production/polkadot-parachain          "$CRAFT_PART_INSTALL/bin/polkadot-parachain"
 
     rust-path:
       - polkadot/
