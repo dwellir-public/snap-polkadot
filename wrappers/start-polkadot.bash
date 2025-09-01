@@ -1,14 +1,15 @@
 #!/bin/bash
-set -eu
 
-echo "=> Preparing the system  (${SNAP_REVISION})"
+# Enable strict mode
+set -euo pipefail
 
-SERVICE_ARGS_FILE="$SNAP_COMMON/service-arguments"
-POLKADOT_BINARY_PATH="${SNAP}/bin/polkadot"
+source "$SNAP/utils/config.sh"
 
-SERVICE_ARGS=$(<$SERVICE_ARGS_FILE)
+echo "=> Preparing the system for start snap revision: (${SNAP_REVISION})"
+
+SERVICE_ARGS=$(<$__SERVICE_ARGS_FILE)
 eval "SERVICE_ARGS_ARRAY=($SERVICE_ARGS)"
 
 echo "=> Service arguments: ${SERVICE_ARGS}"
 # Start the service with the specified parameters
-exec "${POLKADOT_BINARY_PATH}" "${SERVICE_ARGS_ARRAY[@]}"
+exec "${__SERVICE_BINARY_PATH}" "${SERVICE_ARGS_ARRAY[@]}"

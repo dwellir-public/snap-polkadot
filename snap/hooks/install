@@ -1,16 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
-. "$SNAP/utils/utils.sh"
+# Enable strict mode
+set -euo pipefail
 
-set -e
-log "Initializing default polkadot snap configuration."
-BASE_PATH="$SNAP_COMMON/polkadot_base"
-DEFAULT_SERVICE_ARGS="--base-path=$BASE_PATH --name=$(hostname)"
+# Source utilities
+source "$SNAP/utils/config.sh"
+source "$SNAP/utils/utils.sh"
 
-# Set snap Defaults
-snapctl set service-args="$DEFAULT_SERVICE_ARGS"
-log "Setting default service-args: $DEFAULT_SERVICE_ARGS"
-# TODO: Find a way to restart the service despite the snapcraft.yaml endure setting.
-snapctl set endure=true
-log "Setting default endure: true"
+# Main execution
+log "Initializing default snap configuration."
 
+# Set snap defaults
+snapctl set "service-args=$__DEFAULT_SERVICE_ARGS"
+log "Setting default service-args: $__DEFAULT_SERVICE_ARGS"
+
+snapctl set "endure=$__DEFAULT_ENDURE"
+log "Setting default endure: $__DEFAULT_ENDURE"
