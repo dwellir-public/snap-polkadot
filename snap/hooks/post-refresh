@@ -1,12 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 
-. "$SNAP/utils/utils.sh"
-. "$SNAP/utils/endure-utils.sh" 
+# Enable strict mode
+set -euo pipefail
 
-if [ $(get_endure) = "true" ]; then
+# Source utilities
+source "$SNAP/utils/config.sh"
+source "$SNAP/utils/utils.sh"
+
+# Main execution
+if endure; then
     log "Endure is enabled, not restarting service."
     exit 0
+elif snapctl services "$__SERVICE_NAME" | grep -q inactive ; then
+    log "Service is not running. Skip restarting."
 else
     log "Endure is disabled, restarting service."
-    snapctl restart polkadot
+    snapctl restart "$__SERVICE_NAME"
 fi

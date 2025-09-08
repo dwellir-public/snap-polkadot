@@ -1,33 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 
-. "$SNAP/utils/utils.sh"
-. "$SNAP/utils/service-args-utils.sh"
-. "$SNAP/utils/endure-utils.sh"
+# Enable strict mode
+set -euo pipefail
 
-handle_service_args_config()
-{
+# Source utilities
+source "$SNAP/utils/config.sh"
+source "$SNAP/utils/utils.sh"
+
+handle_service_args_config() {
     if ! service_args_has_changed; then
         log "service-args value was not changed."
-		return 0
-	fi
+        return 0
+    fi
 
+    local service_args
     service_args="$(get_service_args)"
     validate_service_args "$service_args"
     set_service_args "$service_args"
     write_service_args_file
-    # restart_polkadot
 }
 
-handle_endure_config()
-{
+handle_endure_config() {
     if ! endure_has_changed; then
         log "endure value was not changed."
-		return 0
-	fi
+        return 0
+    fi
 
+    local endure
     endure="$(get_endure)"
     set_endure "$endure"
 }
 
+# Main execution
 handle_service_args_config
 handle_endure_config
