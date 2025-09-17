@@ -172,6 +172,7 @@ validate_service_args() {
     local service_args="$1"
     set -- $service_args  # This splits the arguments for processing
 
+    local base_path=""
     while [ "$#" -gt 0 ]; do
         case "$1" in
             --base-path=*)
