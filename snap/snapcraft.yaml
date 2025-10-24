@@ -47,7 +47,7 @@ parts:
   polkadot:
     plugin: rust
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-stable2509
+    source-tag: polkadot-stable2509-1
     source-depth: 1
     build-packages:
       - build-essential
