@@ -59,15 +59,16 @@ parts:
       - pkg-config
       - protobuf-compiler
     override-pull: |
-      rustup install stable
-      rustup default stable
-      rustup target add wasm32-unknown-unknown
-      rustup component add rust-src
+      rustup install 1.88.0
+      rustup default 1.88.0
       rustup update nightly
+      rustup component add rust-src --toolchain 1.88.0
+      rustup target add wasm32-unknown-unknown --toolchain 1.88.0
       rustup target add wasm32-unknown-unknown --toolchain nightly
-      rustup component add rust-src --toolchain nightly
+      rustup target add wasm32v1-none --toolchain 1.88.0
+      rustup target add wasm32v1-none --toolchain 1.88.0-x86_64-unknown-linux-gnu
       craftctl default
-      craftctl set version="polkadot-stable2506-1-$(git rev-parse --short HEAD)"
+      craftctl set version="polkadot-stable2512-$(git rev-parse --short HEAD)"
     rust-path:
       - polkadot/
     prime:
