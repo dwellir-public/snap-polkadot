@@ -46,6 +46,7 @@ description: |
 parts:
   polkadot:
     plugin: rust
+    rust-channel: "1.88.0"
     source: https://github.com/paritytech/polkadot-sdk.git
     source-tag: polkadot-stable2512
     source-depth: 1
