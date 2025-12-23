@@ -88,6 +88,15 @@ parts:
       stage:
         - utils/
 
+# Declare a slot for the polkadot cli binary (use then in apps)
+slots:
+  bins:
+    interface: content
+    content: executables
+    source:
+      read: 
+        - $SNAP/bin
+
 apps:
   polkadot:
     command: wrappers/start-polkadot.bash
@@ -110,6 +119,8 @@ apps:
     plugs:
       - network
       - home
+    slots:
+      - bins
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8

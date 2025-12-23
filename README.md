@@ -92,3 +92,9 @@ Configure your startup parameters (written to /var/snap/polkadot/common/service-
 ### Alternatively - use systemd
 
 `sudo systemctl <stop|start> snap.polkadot.polkadot.service`
+
+### Running polkadot from other snaps
+
+Other snaps can call on this snap to execute polkadot commands by connecting to the bins slot. This avoids getting "Permission denied" when calling on polkadot from other snaps.
+
+```sudo snap connect <snap-name>:bins polkadot:bins```
