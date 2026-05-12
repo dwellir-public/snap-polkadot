@@ -7,11 +7,25 @@ readonly STATUS_CHECKER="${TESTS_DIR}/check_node_status.py"
 readonly POLKADOT_SNAP_NAME="${POLKADOT_SNAP_NAME:-polkadot}"
 readonly POLKADOT_SNAP_SERVICE="snap.${POLKADOT_SNAP_NAME}.polkadot.service"
 
+using_local_snap_build() {
+    [[ -n "${POLKADOT_SNAP_FILE:-}" ]]
+}
+
 cleanup_polkadot_snap() {
     sudo snap remove "${POLKADOT_SNAP_NAME}" --purge >/dev/null 2>&1 || true
 }
 
 install_polkadot_snap() {
+    if using_local_snap_build; then
+        if [[ ! -f "${POLKADOT_SNAP_FILE}" ]]; then
+            echo "Local snap file does not exist: ${POLKADOT_SNAP_FILE}" >&2
+            return 1
+        fi
+
+        sudo snap install --dangerous "${POLKADOT_SNAP_FILE}"
+        return 0
+    fi
+
     if [[ -n "${POLKADOT_INSTALL_REVISION:-}" ]]; then
         sudo snap install "${POLKADOT_SNAP_NAME}" --revision="${POLKADOT_INSTALL_REVISION}"
         return 0
@@ -22,7 +36,7 @@ install_polkadot_snap() {
         return 0
     fi
 
-    echo "POLKADOT_INSTALL_REVISION or POLKADOT_INSTALL_CHANNEL must be set." >&2
+    echo "POLKADOT_SNAP_FILE, POLKADOT_INSTALL_REVISION, or POLKADOT_INSTALL_CHANNEL must be set." >&2
     return 1
 }
 
@@ -64,14 +78,35 @@ run_node_status_checks() {
     python3 "${STATUS_CHECKER}"
 }
 
-get_installed_revision() {
+get_installed_revision_raw() {
     snap info --verbose "${POLKADOT_SNAP_NAME}" | awk '/installed:/ { gsub(/[()]/, "", $3); print $3; exit }'
 }
 
+get_installed_revision() {
+    local revision
+
+    revision="$(get_installed_revision_raw)"
+    if [[ ! "${revision}" =~ ^[0-9]+$ ]]; then
+        echo "Installed revision is not numeric: ${revision}" >&2
+        return 1
+    fi
+
+    echo "${revision}"
+}
+
 find_previous_available_revision() {
-    local current_revision="${1:-$(get_installed_revision)}"
+    local current_revision="${1:-}"
     local max_probe_depth="${POLKADOT_REVISION_PROBE_DEPTH:-25}"
     local candidate_revision temp_dir basename
+
+    if [[ -z "${current_revision}" ]]; then
+        current_revision="$(get_installed_revision_raw)"
+    fi
+
+    if [[ ! "${current_revision}" =~ ^[0-9]+$ ]]; then
+        echo "Installed revision '${current_revision}' is not numeric. Set POLKADOT_DOWNGRADE_REVISION explicitly when testing a local snap build." >&2
+        return 1
+    fi
 
     temp_dir="$(mktemp -d)"
     trap 'rm -rf "${temp_dir}"' RETURN
