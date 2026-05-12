@@ -1,0 +1,144 @@
+name: Manual Polkadot Revision Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: "Revision to install during the tests."
+        required: true
+        type: string
+      chain:
+        description: "Which chain set to test."
+        default: all
+        required: true
+        type: choice
+        options:
+          - all
+          - polkadot
+          - kusama
+          - westend
+          - paseo
+
+jobs:
+  parse-inputs:
+    runs-on: ubuntu-latest
+    outputs:
+      install_revision: ${{ steps.parse.outputs.install_revision }}
+      run_polkadot_full_suite: ${{ steps.parse.outputs.run_polkadot_full_suite }}
+      install_only_chains: ${{ steps.parse.outputs.install_only_chains }}
+    steps:
+      - id: parse
+        env:
+          INPUT_REVISION: ${{ inputs.revision }}
+          INPUT_CHAIN: ${{ inputs.chain }}
+        run: |
+          set -euo pipefail
+
+          if ! [[ "${INPUT_REVISION}" =~ ^[0-9]+$ ]]; then
+            echo "Revision '${INPUT_REVISION}' is not numeric." >&2
+            exit 1
+          fi
+
+          case "${INPUT_CHAIN}" in
+            all)
+              run_polkadot_full_suite=true
+              install_only_chains='["kusama","westend","paseo"]'
+              ;;
+            polkadot)
+              run_polkadot_full_suite=true
+              install_only_chains='[]'
+              ;;
+            kusama|westend|paseo)
+              run_polkadot_full_suite=false
+              install_only_chains="[\"${INPUT_CHAIN}\"]"
+              ;;
+            *)
+              echo "Unsupported chain input: ${INPUT_CHAIN}" >&2
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "install_revision=${INPUT_REVISION}"
+            echo "run_polkadot_full_suite=${run_polkadot_full_suite}"
+            echo "install_only_chains=${install_only_chains}"
+          } >> "${GITHUB_OUTPUT}"
+
+  polkadot-full-suite:
+    needs: parse-inputs
+    if: needs.parse-inputs.outputs.run_polkadot_full_suite == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y netcat-openbsd
+      - name: Run initial install test
+        env:
+          POLKADOT_INSTALL_REVISION: ${{ needs.parse-inputs.outputs.install_revision }}
+          POLKADOT_TEST_CHAIN: polkadot
+        run: bash tests/test_initial_install.sh
+      - name: Run base-path validation test
+        env:
+          POLKADOT_TEST_CHAIN: polkadot
+        run: bash tests/test_base_path.sh
+      - name: Run downgrade test
+        run: bash tests/test_downgrade.sh
+      - name: Restore requested revision before endure
+        env:
+          POLKADOT_INSTALL_REVISION: ${{ needs.parse-inputs.outputs.install_revision }}
+          POLKADOT_TEST_CHAIN: polkadot
+        run: bash tests/test_initial_install.sh
+      - name: Run endure test
+        run: bash tests/test_endure.sh
+      - name: Collect snap diagnostics
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/polkadot-full-suite
+          snap info polkadot > artifacts/polkadot-full-suite/snap-info.txt 2>&1 || true
+          snap services polkadot > artifacts/polkadot-full-suite/snap-services.txt 2>&1 || true
+          sudo snap logs polkadot --abs-time -n all > artifacts/polkadot-full-suite/snap-logs.txt 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: polkadot-full-suite-artifacts
+          path: artifacts/polkadot-full-suite
+
+  install-only-chains:
+    needs: parse-inputs
+    if: needs.parse-inputs.outputs.install_only_chains != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        chain: ${{ fromJson(needs.parse-inputs.outputs.install_only_chains) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y netcat-openbsd
+      - name: Run basic install test
+        env:
+          POLKADOT_INSTALL_REVISION: ${{ needs.parse-inputs.outputs.install_revision }}
+          POLKADOT_TEST_CHAIN: ${{ matrix.chain }}
+        run: bash tests/test_basic_install.sh
+      - name: Collect snap diagnostics
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p "artifacts/${{ matrix.chain }}"
+          snap info polkadot > "artifacts/${{ matrix.chain }}/snap-info.txt" 2>&1 || true
+          snap services polkadot > "artifacts/${{ matrix.chain }}/snap-services.txt" 2>&1 || true
+          sudo snap logs polkadot --abs-time -n all > "artifacts/${{ matrix.chain }}/snap-logs.txt" 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ format('{0}-install-artifacts', matrix.chain) }}
+          path: ${{ format('artifacts/{0}', matrix.chain) }}
