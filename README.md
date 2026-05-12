@@ -117,7 +117,7 @@ If `service-args` does not include `--base-path`, the snap automatically prepend
 ```sudo snap set polkadot endure=true|false```
 
 If true the Polkadot service will not be restarted after a snap refresh.
-Note that the Polkadot service will still be restarted as the result of changing service-args, etc.
+Changes to `service-args` are written immediately, but they take effect on the next service start or manual `sudo snap restart polkadot`.
 
 Use this when restarts should be avoided e.g. when running a validator.
 

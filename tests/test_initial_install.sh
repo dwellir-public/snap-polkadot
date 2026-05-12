@@ -16,11 +16,13 @@ sudo snap start polkadot
 sleep 5
 check_polkadot_service_running
 
+before_restart_log_count="$(get_snap_log_count)"
 sudo snap set polkadot service-args="${EXPECTED_SERVICE_ARGS_SUBSTRING}"
+sudo snap restart polkadot
 
 wait_for_polkadot_service
 
 wait_for_node_health
 run_node_status_checks
-assert_logs_contain "Service arguments: --base-path="
-assert_logs_contain "${EXPECTED_SERVICE_ARGS_SUBSTRING}"
+assert_logs_after_line_contain "${before_restart_log_count}" "Service arguments: --base-path="
+assert_logs_after_line_contain "${before_restart_log_count}" "${EXPECTED_SERVICE_ARGS_SUBSTRING}"
