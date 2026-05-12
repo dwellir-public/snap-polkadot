@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.request
 
+
 def get_snap_version():
     snap_info_output = subprocess.check_output(["snap", "info", "polkadot"], text=True)
     for line in snap_info_output.splitlines():
@@ -30,6 +31,31 @@ def rpc_request(method: str):
     except urllib.error.URLError as exc:
         print(f"FAIL: RPC call for {method} failed: {exc}")
         sys.exit(1)
+
+
+def extract_git_suffix(version: str):
+    if "-" not in version:
+        return None
+
+    candidate = version.rsplit("-", 1)[-1].lower()
+    if all(char in "0123456789abcdef" for char in candidate):
+        return candidate
+
+    return None
+
+
+def versions_match(snap_version: str, rpc_version: str):
+    normalized_snap_version = snap_version[1:] if snap_version.startswith("v") else snap_version
+    if rpc_version == normalized_snap_version or rpc_version.startswith(f"{normalized_snap_version}-"):
+        return True
+
+    snap_git_suffix = extract_git_suffix(normalized_snap_version)
+    rpc_git_suffix = extract_git_suffix(rpc_version)
+    if snap_git_suffix and rpc_git_suffix:
+        return rpc_git_suffix.startswith(snap_git_suffix) or snap_git_suffix.startswith(rpc_git_suffix)
+
+    return False
+
 
 def expected_chain_name():
     explicit_expected = os.environ.get("POLKADOT_EXPECTED_CHAIN")
@@ -57,11 +83,7 @@ def check_version():
         print("Failed to retrieve the snap version.")
         sys.exit(1)
 
-    if snap_version.startswith("v"):
-        snap_version = snap_version[1:]
-
-    common_length = min(len(rpc_version), len(snap_version))
-    if rpc_version[:common_length] == snap_version[:common_length]:
+    if versions_match(snap_version, rpc_version):
         print(f"SUCCESS: Version check passed: RPC version {rpc_version} matches snap version {snap_version}")
     else:
         print(f"FAIL: Version check failed: RPC version {rpc_version} does not match snap version {snap_version}")

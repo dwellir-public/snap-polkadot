@@ -108,7 +108,7 @@ jobs:
           name: polkadot-full-suite-artifacts
           path: artifacts/polkadot-full-suite
 
-  install-only-chains:
+  light-test-chain-matrix:
     needs: parse-inputs
     if: needs.parse-inputs.outputs.install_only_chains != '[]'
     runs-on: ubuntu-latest

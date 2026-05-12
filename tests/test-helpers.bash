@@ -111,14 +111,52 @@ get_rpc_version() {
         http://localhost:9933 | python3 -c 'import json, sys; print(json.load(sys.stdin)["result"])'
 }
 
+extract_git_suffix() {
+    local version="$1"
+    local candidate
+
+    [[ "${version}" == *-* ]] || return 1
+    candidate="${version##*-}"
+
+    if [[ "${candidate}" =~ ^[0-9a-fA-F]+$ ]]; then
+        printf '%s\n' "${candidate,,}"
+        return 0
+    fi
+
+    return 1
+}
+
+versions_match() {
+    local snap_version="$1"
+    local rpc_version="$2"
+    local normalized_snap_version snap_git_suffix rpc_git_suffix
+
+    normalized_snap_version="${snap_version#v}"
+    if [[ "${rpc_version}" == "${normalized_snap_version}" || "${rpc_version}" == "${normalized_snap_version}-"* ]]; then
+        return 0
+    fi
+
+    snap_git_suffix="$(extract_git_suffix "${normalized_snap_version}" || true)"
+    rpc_git_suffix="$(extract_git_suffix "${rpc_version}" || true)"
+
+    if [[ -n "${snap_git_suffix}" && -n "${rpc_git_suffix}" ]]; then
+        [[ "${rpc_git_suffix}" == "${snap_git_suffix}"* || "${snap_git_suffix}" == "${rpc_git_suffix}"* ]]
+        return
+    fi
+
+    return 1
+}
+
 get_snap_logs() {
     sudo snap logs "${POLKADOT_SNAP_NAME}" -n all --abs-time
 }
 
 assert_logs_contain() {
     local pattern="$1"
+    local logs
 
-    if get_snap_logs | grep -Fq -- "${pattern}"; then
+    logs="$(get_snap_logs)"
+    if grep -Fq -- "${pattern}" <<< "${logs}"; then
         echo "Snap logs contain expected text: ${pattern}"
         return 0
     fi
@@ -129,8 +167,10 @@ assert_logs_contain() {
 
 assert_logs_do_not_contain() {
     local pattern="$1"
+    local logs
 
-    if get_snap_logs | grep -Fq -- "${pattern}"; then
+    logs="$(get_snap_logs)"
+    if grep -Fq -- "${pattern}" <<< "${logs}"; then
         echo "Snap logs unexpectedly contain text: ${pattern}" >&2
         return 1
     fi
@@ -140,13 +180,12 @@ assert_logs_do_not_contain() {
 }
 
 assert_rpc_version_matches_installed() {
-    local snap_version rpc_version normalized_snap_version
+    local snap_version rpc_version
 
     snap_version="$(get_snap_version)"
     rpc_version="$(get_rpc_version)"
-    normalized_snap_version="${snap_version#v}"
 
-    if [[ "${rpc_version}" == "${normalized_snap_version}"* ]]; then
+    if versions_match "${snap_version}" "${rpc_version}"; then
         echo "RPC version matches installed snap version: ${rpc_version} vs ${snap_version}"
         return 0
     fi
@@ -156,13 +195,12 @@ assert_rpc_version_matches_installed() {
 }
 
 assert_rpc_version_differs_from_installed() {
-    local snap_version rpc_version normalized_snap_version
+    local snap_version rpc_version
 
     snap_version="$(get_snap_version)"
     rpc_version="$(get_rpc_version)"
-    normalized_snap_version="${snap_version#v}"
 
-    if [[ "${rpc_version}" != "${normalized_snap_version}"* ]]; then
+    if ! versions_match "${snap_version}" "${rpc_version}"; then
         echo "RPC version still reflects the pre-refresh process as expected: ${rpc_version} vs ${snap_version}"
         return 0
     fi
