@@ -10,7 +10,7 @@ readonly EXPECTED_SERVICE_ARGS="--name=testing --chain=${POLKADOT_TEST_CHAIN} --
 cleanup_polkadot_snap
 install_polkadot_snap
 
-sudo snap set polkadot service-args="--name=testing --chain=${POLKADOT_TEST_CHAIN}"
+sudo snap set polkadot service-args="--name=testing --chain=${POLKADOT_TEST_CHAIN} --rpc-port=9933"
 sudo snap start polkadot
 
 sleep 5
