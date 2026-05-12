@@ -15,9 +15,7 @@ sudo snap start polkadot
 
 wait_for_polkadot_service
 
-echo "Waiting 20 seconds for node to get peers"
-sleep 20
-
+wait_for_node_health
 run_node_status_checks
 assert_logs_contain "Service arguments: --base-path="
 assert_logs_contain "${EXPECTED_SERVICE_ARGS_SUBSTRING}"

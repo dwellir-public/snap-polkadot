@@ -81,8 +81,65 @@ run_node_status_checks() {
     python3 "${STATUS_CHECKER}"
 }
 
+wait_for_node_health() {
+    local timeout="${1:-120}"
+    local interval=5
+    local elapsed=0
+
+    echo "Waiting for Polkadot to get peers and start syncing..."
+
+    while (( elapsed < timeout )); do
+        if python3 - <<'PY'
+import json
+import sys
+import urllib.error
+import urllib.request
+
+payload = json.dumps({"id": 1, "jsonrpc": "2.0", "method": "system_health"}).encode("utf-8")
+request = urllib.request.Request(
+    "http://localhost:9933",
+    data=payload,
+    headers={"Content-Type": "application/json"},
+)
+
+try:
+    with urllib.request.urlopen(request, timeout=10) as response:
+        data = json.loads(response.read().decode("utf-8"))
+except Exception:
+    sys.exit(1)
+
+result = data.get("result", {})
+healthy = (
+    result.get("peers", 0) > 0
+    and result.get("isSyncing") is True
+    and result.get("shouldHavePeers") is True
+)
+sys.exit(0 if healthy else 1)
+PY
+        then
+            echo "Polkadot has peers and is syncing."
+            return 0
+        fi
+
+        sleep "${interval}"
+        elapsed=$((elapsed + interval))
+        echo "Still waiting for healthy node state after ${elapsed}s"
+    done
+
+    echo "Timed out waiting for Polkadot to get peers and start syncing." >&2
+    return 1
+}
+
 get_installed_revision_raw() {
     snap info --verbose "${POLKADOT_SNAP_NAME}" | awk '/installed:/ { gsub(/[()]/, "", $3); print $3; exit }'
+}
+
+get_tracking_channel() {
+    snap list "${POLKADOT_SNAP_NAME}" --all | awk 'NR==2 { print $4; exit }'
+}
+
+is_untracked_install() {
+    [[ "$(get_tracking_channel)" == "-" ]]
 }
 
 get_installed_revision() {
@@ -132,6 +189,19 @@ find_previous_available_revision() {
 
     echo "Unable to find a lower published revision for ${POLKADOT_SNAP_NAME} below ${current_revision}." >&2
     return 1
+}
+
+refresh_to_revision() {
+    local revision="$1"
+
+    if is_untracked_install; then
+        echo "Refreshing ${POLKADOT_SNAP_NAME} to revision ${revision} with --amend because the current install is untracked."
+        sudo snap refresh "${POLKADOT_SNAP_NAME}" --amend --revision="${revision}"
+        return 0
+    fi
+
+    echo "Refreshing ${POLKADOT_SNAP_NAME} to revision ${revision}."
+    sudo snap refresh "${POLKADOT_SNAP_NAME}" --revision="${revision}"
 }
 
 get_service_pid() {
@@ -189,6 +259,17 @@ get_snap_logs() {
     sudo snap logs "${POLKADOT_SNAP_NAME}" -n all --abs-time
 }
 
+get_snap_log_count() {
+    get_snap_logs | wc -l | tr -d '[:space:]'
+}
+
+get_snap_logs_after_line() {
+    local line_count="$1"
+    local start_line=$((line_count + 1))
+
+    get_snap_logs | tail -n +"${start_line}"
+}
+
 assert_logs_contain() {
     local pattern="$1"
     local logs
@@ -214,6 +295,36 @@ assert_logs_do_not_contain() {
     fi
 
     echo "Snap logs do not contain forbidden text: ${pattern}"
+    return 0
+}
+
+assert_logs_after_line_contain() {
+    local line_count="$1"
+    local pattern="$2"
+    local logs
+
+    logs="$(get_snap_logs_after_line "${line_count}")"
+    if grep -Fq -- "${pattern}" <<< "${logs}"; then
+        echo "New snap logs contain expected text: ${pattern}"
+        return 0
+    fi
+
+    echo "New snap logs do not contain expected text: ${pattern}" >&2
+    return 1
+}
+
+assert_logs_after_line_do_not_contain() {
+    local line_count="$1"
+    local pattern="$2"
+    local logs
+
+    logs="$(get_snap_logs_after_line "${line_count}")"
+    if grep -Fq -- "${pattern}" <<< "${logs}"; then
+        echo "New snap logs unexpectedly contain text: ${pattern}" >&2
+        return 1
+    fi
+
+    echo "New snap logs do not contain forbidden text: ${pattern}"
     return 0
 }
 

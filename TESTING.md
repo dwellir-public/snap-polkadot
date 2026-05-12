@@ -22,6 +22,8 @@ The test scripts live in `tests/` and share the helper logic in `tests/test-help
 
 ### Available scripts
 
+- `tests/run_all_local.sh`
+  Runs the full local test sequence against one snap file and one downgrade revision.
 - `tests/test_basic_install.sh`
   Runs the basic install-and-sync test for a single chain.
 - `tests/test_initial_install.sh`
@@ -129,6 +131,14 @@ bash tests/test_shellscripts.sh
 ```
 
 ### Test a local snap build on Polkadot
+
+Run the full local sequence:
+
+```bash
+bash tests/run_all_local.sh /full/path/to/polkadot.snap 64
+```
+
+Or run the individual scripts:
 
 ```bash
 POLKADOT_SNAP_FILE=/full/path/to/polkadot.snap bash tests/test_initial_install.sh

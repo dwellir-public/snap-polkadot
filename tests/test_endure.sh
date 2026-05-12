@@ -15,9 +15,10 @@ fi
 run_node_status_checks
 
 before_refresh_pid="$(get_service_pid)"
+before_refresh_log_count="$(get_snap_log_count)"
 
 sudo snap set polkadot endure=true
-sudo snap refresh polkadot --revision="${downgrade_revision}"
+refresh_to_revision "${downgrade_revision}"
 
 after_refresh_pid="$(get_service_pid)"
 if [[ "${before_refresh_pid}" != "${after_refresh_pid}" ]]; then
@@ -25,10 +26,10 @@ if [[ "${before_refresh_pid}" != "${after_refresh_pid}" ]]; then
     exit 1
 fi
 
-assert_logs_contain "Endure is enabled, not restarting service."
-assert_logs_do_not_contain "Preparing the system for start snap revision: (${downgrade_revision})"
+assert_logs_after_line_do_not_contain "${before_refresh_log_count}" "Preparing the system for start snap revision: (${downgrade_revision})"
 assert_rpc_version_differs_from_installed
 
+before_manual_restart_log_count="$(get_snap_log_count)"
 sudo snap restart polkadot
 wait_for_polkadot_service
 
@@ -39,4 +40,4 @@ if [[ "${after_refresh_pid}" == "${after_manual_restart_pid}" ]]; then
 fi
 
 assert_rpc_version_matches_installed
-assert_logs_contain "Preparing the system for start snap revision: (${downgrade_revision})"
+assert_logs_after_line_contain "${before_manual_restart_log_count}" "Preparing the system for start snap revision: (${downgrade_revision})"
