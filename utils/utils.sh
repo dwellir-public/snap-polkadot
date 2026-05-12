@@ -180,10 +180,11 @@ validate_service_args() {
                 ;;
             --base-path)
                 shift
-                if [ -z "$1" ]; then
+                if [ "$#" -eq 0 ] || [ -z "${1:-}" ]; then
                     log "No path specified for --base-path. No change was made to service-args."
                     set_service_args "$(get_previous_service_args)"
-                    exit 1
+                    echo "base-path requires a value. No change was made to service-args."
+                    return 1
                 fi
                 base_path=$(remove_quotes "$1")
                 ;;
@@ -193,7 +194,7 @@ validate_service_args() {
             if ! is_allowed_path "$base_path"; then
                 set_service_args "$(get_previous_service_args)"
                 log "base-path $base_path is not allowed. Only snap default or those allowed by removable-media is allowed. No change was made to service-args."
-                exit 1
+                return 1
             fi
             # Reset to avoid false positives in next loop iteration
             base_path=""
