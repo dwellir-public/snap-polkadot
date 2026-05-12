@@ -141,6 +141,15 @@ test_validate_service_args() {
     local initial_args
     initial_args="$(get_service_args)"
     set_previous_service_args "$initial_args"
+
+    local effective_args
+    effective_args="$(get_effective_service_args)"
+    if [[ "${effective_args}" == "${__DEFAULT_SERVICE_ARGS}"* ]]; then
+        echo "  Effective args include the default base-path when none is configured"
+    else
+        echo "  FAILED: Effective args did not include the default base-path" >&2
+        return 1
+    fi
     
     # Test 1: Valid base-path with equals format (allowed path)
     run_test_case "Valid base-path with equals format" \
@@ -231,6 +240,18 @@ test_validate_service_args() {
                   "--base-path=$SNAP_COMMON/polkadot_base --base-path=/invalid/path" \
                   1 \
                   "multiple_base_paths_invalid"
+
+    # Test 16: Effective args preserve an explicit base-path instead of prepending the default
+    set_service_args "--base-path=/mnt/polkadot --name=test-node"
+    effective_args="$(get_effective_service_args)"
+    test_count=$((test_count + 1))
+    echo "  Test $test_count: Effective args preserve explicit base-path"
+    if [[ "${effective_args}" == "--base-path=/mnt/polkadot --name=test-node" ]]; then
+        echo "    PASSED: Explicit base-path was preserved"
+        passed_count=$((passed_count + 1))
+    else
+        echo "    FAILED: Explicit base-path was not preserved"
+    fi
     
     # Print test summary
     echo ""

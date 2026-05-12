@@ -35,7 +35,7 @@ restart_service() {
 
 write_service_args_file() {
     local service_args
-    service_args="$(get_service_args)"
+    service_args="$(get_effective_service_args)"
     log "Writing snap config \"$service_args\" to file: $__SERVICE_ARGS_FILE"
     echo "$service_args" > "$__SERVICE_ARGS_FILE"
 }
@@ -56,6 +56,39 @@ get_service_args() {
         snapctl set "service-args=$service_args"
     fi
     echo "$service_args"
+}
+
+service_args_include_base_path() {
+    local service_args="${1:-}"
+
+    set -- $service_args
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --base-path|--base-path=*)
+                return 0
+                ;;
+        esac
+        shift
+    done
+
+    return 1
+}
+
+get_effective_service_args() {
+    local service_args effective_service_args
+
+    service_args="$(get_service_args)"
+    if service_args_include_base_path "$service_args"; then
+        effective_service_args="$service_args"
+    elif [[ -n "$service_args" ]]; then
+        log "Adding default base-path to service args: $__DEFAULT_SERVICE_ARGS"
+        effective_service_args="$__DEFAULT_SERVICE_ARGS $service_args"
+    else
+        log "Using default service args: $__DEFAULT_SERVICE_ARGS"
+        effective_service_args="$__DEFAULT_SERVICE_ARGS"
+    fi
+
+    echo "$effective_service_args"
 }
 
 set_previous_service_args() {
