@@ -4,9 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       revision:
-        description: "Revision to install during the tests."
-        required: true
+        description: "Store revision to install during the tests. Leave empty when build_snap=true."
+        required: false
         type: string
+      downgrade_revision:
+        description: "Revision to downgrade to during downgrade/endure tests. Required for build_snap=true full-suite runs."
+        required: false
+        type: string
+      build_snap:
+        description: "Build the snap in this workflow and test that local artifact instead of a store revision."
+        required: true
+        default: false
+        type: boolean
       chain:
         description: "Which chain set to test."
         default: all
@@ -23,21 +32,24 @@ jobs:
   parse-inputs:
     runs-on: ubuntu-latest
     outputs:
+      use_local_snap: ${{ steps.parse.outputs.use_local_snap }}
       install_revision: ${{ steps.parse.outputs.install_revision }}
+      downgrade_revision: ${{ steps.parse.outputs.downgrade_revision }}
       run_polkadot_full_suite: ${{ steps.parse.outputs.run_polkadot_full_suite }}
       install_only_chains: ${{ steps.parse.outputs.install_only_chains }}
     steps:
       - id: parse
         env:
           INPUT_REVISION: ${{ inputs.revision }}
+          INPUT_DOWNGRADE_REVISION: ${{ inputs.downgrade_revision }}
+          INPUT_BUILD_SNAP: ${{ inputs.build_snap }}
           INPUT_CHAIN: ${{ inputs.chain }}
         run: |
           set -euo pipefail
 
-          if ! [[ "${INPUT_REVISION}" =~ ^[0-9]+$ ]]; then
-            echo "Revision '${INPUT_REVISION}' is not numeric." >&2
-            exit 1
-          fi
+          install_revision="$(echo "${INPUT_REVISION}" | tr -d '[:space:]')"
+          downgrade_revision="$(echo "${INPUT_DOWNGRADE_REVISION}" | tr -d '[:space:]')"
+          use_local_snap="${INPUT_BUILD_SNAP}"
 
           case "${INPUT_CHAIN}" in
             all)
@@ -58,27 +70,94 @@ jobs:
               ;;
           esac
 
+          if [[ "${use_local_snap}" == "true" ]]; then
+            if [[ -n "${install_revision}" ]]; then
+              echo "Do not set revision when build_snap=true." >&2
+              exit 1
+            fi
+
+            if [[ "${run_polkadot_full_suite}" == "true" && -z "${downgrade_revision}" ]]; then
+              echo "downgrade_revision is required when build_snap=true and the Polkadot full suite will run." >&2
+              exit 1
+            fi
+          else
+            if [[ -z "${install_revision}" ]]; then
+              echo "revision is required when build_snap=false." >&2
+              exit 1
+            fi
+            if ! [[ "${install_revision}" =~ ^[0-9]+$ ]]; then
+              echo "Revision '${install_revision}' is not numeric." >&2
+              exit 1
+            fi
+          fi
+
+          if [[ -n "${downgrade_revision}" ]] && ! [[ "${downgrade_revision}" =~ ^[0-9]+$ ]]; then
+            echo "downgrade_revision '${downgrade_revision}' is not numeric." >&2
+            exit 1
+          fi
+
           {
-            echo "install_revision=${INPUT_REVISION}"
+            echo "use_local_snap=${use_local_snap}"
+            echo "install_revision=${install_revision}"
+            echo "downgrade_revision=${downgrade_revision}"
             echo "run_polkadot_full_suite=${run_polkadot_full_suite}"
             echo "install_only_chains=${install_only_chains}"
           } >> "${GITHUB_OUTPUT}"
 
-  polkadot-full-suite:
+  build-snap:
     needs: parse-inputs
-    if: needs.parse-inputs.outputs.run_polkadot_full_suite == 'true'
+    if: needs.parse-inputs.outputs.use_local_snap == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+      - uses: actions/upload-artifact@v4
+        with:
+          name: built-snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+      - name: Save snapcraft log
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.snapcraft.conclusion == 'failure' }}
+        with:
+          name: snapcraft-log
+          path: /home/runner/.local/state/snapcraft/log/snapcraft-*.log
+
+  polkadot-full-suite:
+    needs:
+      - parse-inputs
+      - build-snap
+    if: always() && needs.parse-inputs.outputs.run_polkadot_full_suite == 'true' && (needs.build-snap.result == 'success' || needs.build-snap.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        if: needs.parse-inputs.outputs.use_local_snap == 'true'
+        with:
+          name: built-snap
+          path: built-snap
       - name: Install test dependencies
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y netcat-openbsd
+      - name: Resolve install source
+        run: |
+          set -euo pipefail
+          if [ "${{ needs.parse-inputs.outputs.use_local_snap }}" = "true" ]; then
+            snap_file="$(find built-snap -maxdepth 1 -type f -name '*.snap' | head -n1)"
+            if [ -z "${snap_file}" ]; then
+              echo "Built snap artifact was not found." >&2
+              exit 1
+            fi
+            echo "POLKADOT_SNAP_FILE=${snap_file}" >> "${GITHUB_ENV}"
+          else
+            echo "POLKADOT_INSTALL_REVISION=${{ needs.parse-inputs.outputs.install_revision }}" >> "${GITHUB_ENV}"
+          fi
       - name: Run initial install test
         env:
-          POLKADOT_INSTALL_REVISION: ${{ needs.parse-inputs.outputs.install_revision }}
           POLKADOT_TEST_CHAIN: polkadot
         run: bash tests/test_initial_install.sh
       - name: Run base-path validation test
@@ -86,13 +165,16 @@ jobs:
           POLKADOT_TEST_CHAIN: polkadot
         run: bash tests/test_base_path.sh
       - name: Run downgrade test
+        env:
+          POLKADOT_DOWNGRADE_REVISION: ${{ needs.parse-inputs.outputs.downgrade_revision }}
         run: bash tests/test_downgrade.sh
       - name: Restore requested revision before endure
         env:
-          POLKADOT_INSTALL_REVISION: ${{ needs.parse-inputs.outputs.install_revision }}
           POLKADOT_TEST_CHAIN: polkadot
         run: bash tests/test_initial_install.sh
       - name: Run endure test
+        env:
+          POLKADOT_DOWNGRADE_REVISION: ${{ needs.parse-inputs.outputs.downgrade_revision }}
         run: bash tests/test_endure.sh
       - name: Collect snap diagnostics
         if: always()
@@ -109,8 +191,10 @@ jobs:
           path: artifacts/polkadot-full-suite
 
   light-test-chain-matrix:
-    needs: parse-inputs
-    if: needs.parse-inputs.outputs.install_only_chains != '[]'
+    needs:
+      - parse-inputs
+      - build-snap
+    if: always() && needs.parse-inputs.outputs.install_only_chains != '[]' && (needs.build-snap.result == 'success' || needs.build-snap.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -119,14 +203,31 @@ jobs:
         chain: ${{ fromJson(needs.parse-inputs.outputs.install_only_chains) }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        if: needs.parse-inputs.outputs.use_local_snap == 'true'
+        with:
+          name: built-snap
+          path: built-snap
       - name: Install test dependencies
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y netcat-openbsd
+      - name: Resolve install source
+        run: |
+          set -euo pipefail
+          if [ "${{ needs.parse-inputs.outputs.use_local_snap }}" = "true" ]; then
+            snap_file="$(find built-snap -maxdepth 1 -type f -name '*.snap' | head -n1)"
+            if [ -z "${snap_file}" ]; then
+              echo "Built snap artifact was not found." >&2
+              exit 1
+            fi
+            echo "POLKADOT_SNAP_FILE=${snap_file}" >> "${GITHUB_ENV}"
+          else
+            echo "POLKADOT_INSTALL_REVISION=${{ needs.parse-inputs.outputs.install_revision }}" >> "${GITHUB_ENV}"
+          fi
       - name: Run basic install test
         env:
-          POLKADOT_INSTALL_REVISION: ${{ needs.parse-inputs.outputs.install_revision }}
           POLKADOT_TEST_CHAIN: ${{ matrix.chain }}
         run: bash tests/test_basic_install.sh
       - name: Collect snap diagnostics
