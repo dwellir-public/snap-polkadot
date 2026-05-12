@@ -22,16 +22,19 @@ install_polkadot_snap() {
             return 1
         fi
 
+        echo "Installing ${POLKADOT_SNAP_NAME} from local snap file: ${POLKADOT_SNAP_FILE}"
         sudo snap install --dangerous "${POLKADOT_SNAP_FILE}"
         return 0
     fi
 
     if [[ -n "${POLKADOT_INSTALL_REVISION:-}" ]]; then
+        echo "Installing ${POLKADOT_SNAP_NAME} from Snap Store revision: ${POLKADOT_INSTALL_REVISION}"
         sudo snap install "${POLKADOT_SNAP_NAME}" --revision="${POLKADOT_INSTALL_REVISION}"
         return 0
     fi
 
     if [[ -n "${POLKADOT_INSTALL_CHANNEL:-}" ]]; then
+        echo "Installing ${POLKADOT_SNAP_NAME} from Snap Store channel: ${POLKADOT_INSTALL_CHANNEL}"
         sudo snap install "${POLKADOT_SNAP_NAME}" --channel="${POLKADOT_INSTALL_CHANNEL}"
         return 0
     fi
