@@ -1,36 +1,41 @@
-#!/bin/sh
+#!/bin/bash
+
+set -euo pipefail
 
 # Setup mock environment for testing outside of snap
 setup_mock_snap_environment() {
     # Set default values if not already set (for testing outside snap)
-    if [ -z "$SNAP" ]; then
+    if [ -z "${SNAP:-}" ]; then
         SNAP="${SNAP:-$(pwd)}"
         export SNAP
     fi
     
-    if [ -z "$SNAP_COMMON" ]; then
+    if [ -z "${SNAP_COMMON:-}" ]; then
         SNAP_COMMON="${SNAP_COMMON:-/tmp/snap-polkadot-test}"
         export SNAP_COMMON
         # Create the directory if it doesn't exist
         mkdir -p "$SNAP_COMMON"
     fi
     
-    if [ -z "$SNAP_DATA" ]; then
+    if [ -z "${SNAP_DATA:-}" ]; then
         SNAP_DATA="${SNAP_DATA:-/tmp/snap-polkadot-data-test}"
         export SNAP_DATA
         mkdir -p "$SNAP_DATA"
     fi
+
+    SNAP_NAME="${SNAP_NAME:-polkadot}"
+    export SNAP_NAME
     
     # Always create mock snapctl for testing to avoid permission issues
     # Create a temporary mock snapctl script
     MOCK_SNAPCTL_DIR="/tmp/mock-snapctl-$$"
+    MOCK_CONFIG_FILE="/tmp/mock-snap-config-$$"
+    export MOCK_CONFIG_FILE
     mkdir -p "$MOCK_SNAPCTL_DIR"
     
     cat > "$MOCK_SNAPCTL_DIR/snapctl" << 'EOF'
 #!/bin/sh
 # Mock snapctl for testing
-
-MOCK_CONFIG_FILE="/tmp/mock-snap-config-$$"
 
 case "$1" in
     "get")
@@ -73,7 +78,7 @@ EOF
     export PATH="$MOCK_SNAPCTL_DIR:$PATH"
     
     # Set a cleanup trap
-    trap 'rm -rf "$MOCK_SNAPCTL_DIR" "/tmp/mock-snap-config-$$" 2>/dev/null' EXIT
+    trap 'rm -rf "$MOCK_SNAPCTL_DIR" "$MOCK_CONFIG_FILE" 2>/dev/null' EXIT
     
     echo "Mock snap environment setup:"
     echo "  SNAP=$SNAP"
@@ -96,7 +101,8 @@ test_validate_service_args() {
     # Setup mock environment first
     setup_mock_snap_environment
     
-    . $SNAP/utils/service-args-utils.sh
+    source "$SNAP/utils/config.sh"
+    source "$SNAP/utils/utils.sh"
 
     local test_count=0
     local passed_count=0
@@ -113,10 +119,13 @@ test_validate_service_args() {
         
         # Capture current service args to restore later
         local original_args="$(get_service_args)"
+        set_previous_service_args "$original_args"
         
         # Run validate_service_args in a subshell to capture exit code
-        (validate_service_args $args) >/dev/null 2>&1
+        set +e
+        (validate_service_args "$args") >/dev/null 2>&1
         local actual_exit_code=$?
+        set -e
         
         if [ "$actual_exit_code" -eq "$expected_exit_code" ]; then
             echo "    PASSED: Expected exit code $expected_exit_code, got $actual_exit_code"
@@ -128,6 +137,19 @@ test_validate_service_args() {
         # Restore original service args
         set_service_args "$original_args"
     }
+
+    local initial_args
+    initial_args="$(get_service_args)"
+    set_previous_service_args "$initial_args"
+
+    local effective_args
+    effective_args="$(get_effective_service_args)"
+    if [[ "${effective_args}" == "${__DEFAULT_SERVICE_ARGS}"* ]]; then
+        echo "  Effective args include the default base-path when none is configured"
+    else
+        echo "  FAILED: Effective args did not include the default base-path" >&2
+        return 1
+    fi
     
     # Test 1: Valid base-path with equals format (allowed path)
     run_test_case "Valid base-path with equals format" \
@@ -218,6 +240,18 @@ test_validate_service_args() {
                   "--base-path=$SNAP_COMMON/polkadot_base --base-path=/invalid/path" \
                   1 \
                   "multiple_base_paths_invalid"
+
+    # Test 16: Effective args preserve an explicit base-path instead of prepending the default
+    set_service_args "--base-path=/mnt/polkadot --name=test-node"
+    effective_args="$(get_effective_service_args)"
+    test_count=$((test_count + 1))
+    echo "  Test $test_count: Effective args preserve explicit base-path"
+    if [[ "${effective_args}" == "--base-path=/mnt/polkadot --name=test-node" ]]; then
+        echo "    PASSED: Explicit base-path was preserved"
+        passed_count=$((passed_count + 1))
+    else
+        echo "    FAILED: Explicit base-path was not preserved"
+    fi
     
     # Print test summary
     echo ""

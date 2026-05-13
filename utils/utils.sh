@@ -35,7 +35,7 @@ restart_service() {
 
 write_service_args_file() {
     local service_args
-    service_args="$(get_service_args)"
+    service_args="$(get_effective_service_args)"
     log "Writing snap config \"$service_args\" to file: $__SERVICE_ARGS_FILE"
     echo "$service_args" > "$__SERVICE_ARGS_FILE"
 }
@@ -56,6 +56,39 @@ get_service_args() {
         snapctl set "service-args=$service_args"
     fi
     echo "$service_args"
+}
+
+service_args_include_base_path() {
+    local service_args="${1:-}"
+
+    set -- $service_args
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --base-path|--base-path=*)
+                return 0
+                ;;
+        esac
+        shift
+    done
+
+    return 1
+}
+
+get_effective_service_args() {
+    local service_args effective_service_args
+
+    service_args="$(get_service_args)"
+    if service_args_include_base_path "$service_args"; then
+        effective_service_args="$service_args"
+    elif [[ -n "$service_args" ]]; then
+        log "Adding default base-path to service args: $__DEFAULT_SERVICE_ARGS"
+        effective_service_args="$__DEFAULT_SERVICE_ARGS $service_args"
+    else
+        log "Using default service args: $__DEFAULT_SERVICE_ARGS"
+        effective_service_args="$__DEFAULT_SERVICE_ARGS"
+    fi
+
+    echo "$effective_service_args"
 }
 
 set_previous_service_args() {
@@ -180,10 +213,11 @@ validate_service_args() {
                 ;;
             --base-path)
                 shift
-                if [ -z "$1" ]; then
+                if [ "$#" -eq 0 ] || [ -z "${1:-}" ]; then
                     log "No path specified for --base-path. No change was made to service-args."
                     set_service_args "$(get_previous_service_args)"
-                    exit 1
+                    echo "base-path requires a value. No change was made to service-args."
+                    return 1
                 fi
                 base_path=$(remove_quotes "$1")
                 ;;
@@ -193,7 +227,7 @@ validate_service_args() {
             if ! is_allowed_path "$base_path"; then
                 set_service_args "$(get_previous_service_args)"
                 log "base-path $base_path is not allowed. Only snap default or those allowed by removable-media is allowed. No change was made to service-args."
-                exit 1
+                return 1
             fi
             # Reset to avoid false positives in next loop iteration
             base_path=""

@@ -1,0 +1,26 @@
+name: Test Shell Scripts
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/test-shellscripts.yaml
+      - tests/test_shellscripts.sh
+      - utils/config.sh
+      - utils/utils.sh
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/test-shellscripts.yaml
+      - tests/test_shellscripts.sh
+      - utils/config.sh
+      - utils/utils.sh
+
+jobs:
+  test-shellscripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellscript tests
+        run: bash tests/test_shellscripts.sh
