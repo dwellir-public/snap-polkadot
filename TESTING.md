@@ -23,7 +23,7 @@ The test scripts live in `tests/` and share the helper logic in `tests/test-help
 ### Available scripts
 
 - `tests/run_all_local.sh`
-  Runs the full local test sequence against one snap file and one downgrade revision.
+  Runs the full local test sequence against either one local snap file or one Snap Store revision.
 - `tests/test_basic_install.sh`
   Runs the basic install-and-sync test for a single chain.
 - `tests/test_initial_install.sh`
@@ -136,6 +136,26 @@ Run the full local sequence:
 
 ```bash
 bash tests/run_all_local.sh /full/path/to/polkadot.snap 64
+```
+
+Or with explicit flags:
+
+```bash
+bash tests/run_all_local.sh --snap-file /full/path/to/polkadot.snap --downgrade-revision 64
+```
+
+### Test a Snap Store revision on Polkadot
+
+Run the same full sequence against a published revision:
+
+```bash
+bash tests/run_all_local.sh --revision 65
+```
+
+If you want to pin the downgrade target instead of auto-discovering it:
+
+```bash
+bash tests/run_all_local.sh --revision 65 --downgrade-revision 64
 ```
 
 Or run the individual scripts:

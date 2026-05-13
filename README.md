@@ -35,6 +35,8 @@ The local test entry points are:
 
 - `bash tests/run_all_local.sh /path/to/file.snap <downgrade-revision>`
   Runs the full local test sequence.
+- `bash tests/run_all_local.sh --revision <revision> [--downgrade-revision <revision>]`
+  Runs the same full sequence against a Snap Store revision.
 - `bash tests/test_shellscripts.sh`
   Fast helper coverage for `utils/utils.sh`.
 - `bash tests/test_basic_install.sh`
