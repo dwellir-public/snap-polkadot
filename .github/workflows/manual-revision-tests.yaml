@@ -113,12 +113,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: snapcore/action-build@v1
         id: snapcraft
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: built-snap
           path: ${{ steps.snapcraft.outputs.snap }}
       - name: Save snapcraft log
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ failure() && steps.snapcraft.conclusion == 'failure' }}
         with:
           name: snapcraft-log
@@ -133,7 +133,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         if: needs.parse-inputs.outputs.use_local_snap == 'true'
         with:
           name: built-snap
@@ -184,7 +184,7 @@ jobs:
           snap info polkadot > artifacts/polkadot-full-suite/snap-info.txt 2>&1 || true
           snap services polkadot > artifacts/polkadot-full-suite/snap-services.txt 2>&1 || true
           sudo snap logs polkadot --abs-time -n all > artifacts/polkadot-full-suite/snap-logs.txt 2>&1 || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: polkadot-full-suite-artifacts
@@ -203,7 +203,7 @@ jobs:
         chain: ${{ fromJson(needs.parse-inputs.outputs.install_only_chains) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         if: needs.parse-inputs.outputs.use_local_snap == 'true'
         with:
           name: built-snap
@@ -238,7 +238,7 @@ jobs:
           snap info polkadot > "artifacts/${{ matrix.chain }}/snap-info.txt" 2>&1 || true
           snap services polkadot > "artifacts/${{ matrix.chain }}/snap-services.txt" 2>&1 || true
           sudo snap logs polkadot --abs-time -n all > "artifacts/${{ matrix.chain }}/snap-logs.txt" 2>&1 || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: ${{ format('{0}-install-artifacts', matrix.chain) }}
