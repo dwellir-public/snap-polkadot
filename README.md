@@ -114,6 +114,8 @@ sudo snap set polkadot service-args="--name DWELLIR-NODE \
 
 If `service-args` does not include `--base-path`, the snap automatically prepends the default base path under `$SNAP_COMMON/polkadot_base` and logs that behavior in `snap logs polkadot`.
 
+`--chain=paseo` is rewritten at service start to the bundled Paseo substitute-relay spec (`$SNAP/chain-specs/paseo.raw.json`), because the spec built into the polkadot binary is the retired pre-relaunch chain. The rewrite is logged in `snap logs polkadot`. Nodes that synced the retired Paseo chain must delete `$SNAP_COMMON/polkadot_base/chains/paseo` first, since the new chain reuses that directory. See [chain-specs/README.md](chain-specs/README.md).
+
 #### endure
 
 ```sudo snap set polkadot endure=true|false```

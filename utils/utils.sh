@@ -147,6 +147,41 @@ endure_has_changed() {
 }
 
 # =======================
+# Chain Spec Resolution
+# =======================
+
+# Description: Rewrites "--chain=paseo" or "--chain paseo" to point at the
+#              bundled substitute-relay chain spec. Every other argument is
+#              passed through unchanged. Results are written into the array
+#              named by the first argument (bash nameref).
+# Usage:       resolve_chain_spec_args <output_array_name> "${args[@]}"
+resolve_chain_spec_args() {
+    local -n __resolved_args="$1"
+    shift
+
+    __resolved_args=()
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --chain=paseo)
+                __resolved_args+=("--chain=${__PASEO_CHAIN_SPEC}")
+                ;;
+            --chain)
+                if [ "${2:-}" = "paseo" ]; then
+                    __resolved_args+=("--chain=${__PASEO_CHAIN_SPEC}")
+                    shift
+                else
+                    __resolved_args+=("$1")
+                fi
+                ;;
+            *)
+                __resolved_args+=("$1")
+                ;;
+        esac
+        shift
+    done
+}
+
+# =======================
 # Path Validation
 # =======================
 

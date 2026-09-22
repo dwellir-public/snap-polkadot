@@ -24,6 +24,12 @@ if [ -z "${__CONFIG_LOADED:-}" ]; then
     __DEFAULT_SERVICE_ARGS="--base-path=$__DEFAULT_DATA_PATH"
     readonly __DEFAULT_SERVICE_ARGS
 
+    # Bundled chain spec for the Paseo substitute relay. The polkadot binary's
+    # built-in "paseo" spec is the retired pre-relaunch chain, so --chain=paseo
+    # is rewritten to this file at service start (see resolve_chain_spec_args).
+    __PASEO_CHAIN_SPEC="$SNAP/chain-specs/paseo.raw.json"
+    readonly __PASEO_CHAIN_SPEC
+
     # Default endure mode setting
     __DEFAULT_ENDURE="false"
     readonly __DEFAULT_ENDURE

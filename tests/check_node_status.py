@@ -66,8 +66,7 @@ def expected_chain_name():
     mapping = {
         "polkadot": "Polkadot",
         "kusama": "Kusama",
-        "paseo": "Paseo Testnet",
-        "paseo-testnet": "Paseo Testnet",
+        "paseo": "Paseo",
         "westend": "Westend",
     }
     return mapping.get(configured_chain, configured_chain)

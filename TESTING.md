@@ -119,6 +119,7 @@ The runtime tests call `tests/check_node_status.py`, which checks:
 - node health reports peers and syncing
 - sync state increases between two checks
 - `system_chain` matches the configured chain
+  (for `paseo` the expected name is `Paseo`, the relaunched substitute relay, not `Paseo Testnet`)
 
 The version match is based on the shared git SHA suffix when the snap version format and RPC version format differ.
 
