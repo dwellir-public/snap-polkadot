@@ -6,9 +6,63 @@ readonly TESTS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly STATUS_CHECKER="${TESTS_DIR}/check_node_status.py"
 readonly POLKADOT_SNAP_NAME="${POLKADOT_SNAP_NAME:-polkadot}"
 readonly POLKADOT_SNAP_SERVICE="snap.${POLKADOT_SNAP_NAME}.polkadot.service"
+readonly CHAIN_SPEC_RESOURCES_DIR="${TESTS_DIR}/resources/chainspecs"
 
 using_local_snap_build() {
     [[ -n "${POLKADOT_SNAP_FILE:-}" ]]
+}
+
+# Chains that must be started from a chain spec file instead of a symbolic
+# name. Paseo was relaunched; the "paseo" spec built into the polkadot binary
+# is the retired chain and never finds peers.
+resolve_chain_spec_filename() {
+    local chain_name="$1"
+
+    case "${chain_name}" in
+        paseo)
+            echo "paseo.raw.json"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+stage_chain_spec_file() {
+    local chain_name="$1"
+    local filename source_path staged_dir staged_path
+
+    filename="$(resolve_chain_spec_filename "${chain_name}")"
+    source_path="${CHAIN_SPEC_RESOURCES_DIR}/${filename}"
+    staged_dir="/var/snap/${POLKADOT_SNAP_NAME}/common/test-chainspecs"
+    staged_path="${staged_dir}/${filename}"
+
+    if [[ ! -f "${source_path}" ]]; then
+        echo "Chain spec file does not exist: ${source_path}" >&2
+        return 1
+    fi
+
+    sudo install -d -m 0755 "${staged_dir}"
+    sudo install -m 0644 "${source_path}" "${staged_path}"
+    echo "${staged_path}"
+}
+
+# Prints the value to pass as --chain for POLKADOT_TEST_CHAIN: an explicit
+# POLKADOT_CHAIN_SPEC_PATH override, a staged spec file for chains that need
+# one, or the symbolic chain name. Call after install_polkadot_snap so that
+# /var/snap/<snap>/common exists.
+get_chain_argument() {
+    if [[ -n "${POLKADOT_CHAIN_SPEC_PATH:-}" ]]; then
+        echo "${POLKADOT_CHAIN_SPEC_PATH}"
+        return 0
+    fi
+
+    local chain_name="${POLKADOT_TEST_CHAIN:-polkadot}"
+    if resolve_chain_spec_filename "${chain_name}" >/dev/null; then
+        stage_chain_spec_file "${chain_name}"
+    else
+        echo "${chain_name}"
+    fi
 }
 
 cleanup_polkadot_snap() {

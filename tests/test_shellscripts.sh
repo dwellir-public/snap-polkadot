@@ -269,86 +269,38 @@ test_validate_service_args() {
     fi
 }
 
-# Test function for resolve_chain_spec_args
-test_resolve_chain_spec_args() {
+# Test function for the committed Paseo chain spec test resource
+test_paseo_chain_spec_resource() {
     echo ""
-    echo "Testing resolve_chain_spec_args function..."
+    echo "Testing Paseo chain spec test resource..."
 
-    source "$SNAP/utils/config.sh"
-    source "$SNAP/utils/utils.sh"
+    local tests_dir
+    tests_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    local paseo_spec="$tests_dir/resources/chainspecs/paseo.raw.json"
 
     local test_count=0
     local passed_count=0
-    local expected_paseo_spec="$SNAP/chain-specs/paseo.raw.json"
-
-    # Helper: resolve the given args and compare the joined result to the expectation
-    run_resolve_case() {
-        local description="$1"
-        local expected="$2"
-        shift 2
-
-        test_count=$((test_count + 1))
-        echo "  Test $test_count: $description"
-
-        local -a resolved=()
-        resolve_chain_spec_args resolved "$@"
-        local actual="${resolved[*]}"
-
-        if [[ "$actual" == "$expected" ]]; then
-            echo "    PASSED: got '$actual'"
-            passed_count=$((passed_count + 1))
-        else
-            echo "    FAILED: expected '$expected', got '$actual'"
-        fi
-    }
-
-    run_resolve_case "--chain=paseo is rewritten to the bundled spec file" \
-        "--name=test --chain=$expected_paseo_spec --rpc-port=9933" \
-        --name=test --chain=paseo --rpc-port=9933
-
-    run_resolve_case "--chain paseo (space form) is rewritten to the bundled spec file" \
-        "--name=test --chain=$expected_paseo_spec --rpc-port=9933" \
-        --name=test --chain paseo --rpc-port=9933
-
-    run_resolve_case "--chain=polkadot is left unchanged" \
-        "--name=test --chain=polkadot" \
-        --name=test --chain=polkadot
-
-    run_resolve_case "--chain kusama (space form) is left unchanged" \
-        "--name=test --chain kusama" \
-        --name=test --chain kusama
-
-    run_resolve_case "an explicit chain spec path is left unchanged" \
-        "--chain=/mnt/specs/custom.json" \
-        --chain=/mnt/specs/custom.json
-
-    run_resolve_case "arguments without --chain are left unchanged" \
-        "--base-path=/var/snap/polkadot/common/polkadot_base --name=test" \
-        --base-path=/var/snap/polkadot/common/polkadot_base --name=test
-
-    run_resolve_case "empty argument list stays empty" \
-        ""
 
     test_count=$((test_count + 1))
-    echo "  Test $test_count: bundled Paseo chain spec file exists in the snap tree"
-    if [[ -f "$expected_paseo_spec" ]]; then
-        echo "    PASSED: $expected_paseo_spec exists"
+    echo "  Test $test_count: Paseo chain spec resource exists"
+    if [[ -f "$paseo_spec" ]]; then
+        echo "    PASSED: $paseo_spec exists"
         passed_count=$((passed_count + 1))
     else
-        echo "    FAILED: $expected_paseo_spec is missing"
+        echo "    FAILED: $paseo_spec is missing"
     fi
 
     test_count=$((test_count + 1))
-    echo "  Test $test_count: bundled Paseo chain spec is the substitute relay (protocolId pad)"
-    if python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d.get("protocolId")=="pad" and d.get("name")=="Paseo" else 1)' "$expected_paseo_spec" 2>/dev/null; then
+    echo "  Test $test_count: Paseo chain spec resource is the relaunched relay (name Paseo, protocolId pad)"
+    if python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d.get("protocolId")=="pad" and d.get("name")=="Paseo" else 1)' "$paseo_spec" 2>/dev/null; then
         echo "    PASSED: spec is name=Paseo protocolId=pad"
         passed_count=$((passed_count + 1))
     else
-        echo "    FAILED: spec is not the substitute relay spec"
+        echo "    FAILED: spec is not the relaunched Paseo spec"
     fi
 
     echo ""
-    echo "Test Summary (resolve_chain_spec_args):"
+    echo "Test Summary (paseo chain spec resource):"
     echo "  Total tests: $test_count"
     echo "  Passed: $passed_count"
     echo "  Failed: $((test_count - passed_count))"
@@ -358,5 +310,5 @@ test_resolve_chain_spec_args() {
 
 overall_status=0
 test_validate_service_args || overall_status=1
-test_resolve_chain_spec_args || overall_status=1
+test_paseo_chain_spec_resource || overall_status=1
 exit "$overall_status"

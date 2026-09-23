@@ -70,6 +70,8 @@ The currently supported test chains are:
 - `westend`
 - `paseo`
 
+For `paseo` the tests do not pass `--chain=paseo`: the spec built into the polkadot binary is the retired pre-relaunch chain and never finds peers. Instead they copy `tests/resources/chainspecs/paseo.raw.json` into `/var/snap/polkadot/common/test-chainspecs/` after installing the snap and run the node with `--chain=/var/snap/polkadot/common/test-chainspecs/paseo.raw.json`. See `get_chain_argument` in `tests/test-helpers.bash`. Set `POLKADOT_CHAIN_SPEC_PATH` to an absolute path readable by the snap to use a different spec file for any chain. The committed spec is described in [tests/resources/chainspecs/README.md](tests/resources/chainspecs/README.md).
+
 Example:
 
 ```bash

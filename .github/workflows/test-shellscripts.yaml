@@ -5,6 +5,8 @@ on:
     paths:
       - .github/workflows/test-shellscripts.yaml
       - tests/test_shellscripts.sh
+      - tests/test-helpers.bash
+      - tests/resources/chainspecs/**
       - utils/config.sh
       - utils/utils.sh
   push:
@@ -13,6 +15,8 @@ on:
     paths:
       - .github/workflows/test-shellscripts.yaml
       - tests/test_shellscripts.sh
+      - tests/test-helpers.bash
+      - tests/resources/chainspecs/**
       - utils/config.sh
       - utils/utils.sh
 
