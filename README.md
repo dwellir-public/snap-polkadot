@@ -14,7 +14,7 @@ snapcraft pack --use-lxd --debug --verbosity=debug # Takes some time.
 
 ## Upgrading Polkadot version
 
-Simply change the version number here: https://github.com/dwellir-public/snap-polkadot/blob/main/snap/snapcraft.yaml#L58 and then of course rebuild.
+Simply change the version number here: https://github.com/dwellir-public/snap-polkadot/blob/main/snap/snapcraft.yaml#L53 and then of course rebuild.
 
 ## Releasing
 
@@ -131,6 +131,30 @@ Setting an alternative base-path can be done by connecting the snap removable-me
 Configure your startup parameters (written to /var/snap/polkadot/common/service-arguments). 
 
     sudo snap set polkadot service-args='--base-path /mnt/polkadot/'
+
+#### Running with a chain spec file (Paseo)
+
+The `paseo` chain spec built into the polkadot binary is the retired pre-relaunch Paseo chain, so `--chain=paseo` starts a node that never finds peers. Paseo was relaunched from block 0 as a substitute relay and its live spec is published at https://github.com/paseo-network/paseo-chain-specs. The snap does not bundle that file because its bootnodes change. Download it and place it where the service can read it, under `/var/snap/polkadot/common`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/paseo-network/paseo-chain-specs/main/paseo.raw.json -o paseo.raw.json
+sudo install -d -m 0755 /var/snap/polkadot/common/chain-specs
+sudo install -m 0644 paseo.raw.json /var/snap/polkadot/common/chain-specs/paseo.raw.json
+```
+
+Then pass the absolute path as `--chain` and restart the service:
+
+```bash
+sudo snap set polkadot service-args="--name DWELLIR-NODE --chain=/var/snap/polkadot/common/chain-specs/paseo.raw.json --rpc-port=9933"
+sudo snap restart polkadot
+```
+
+Notes:
+
+- A node that previously synced the retired Paseo chain must remove `/var/snap/polkadot/common/polkadot_base/chains/paseo` before restarting, since both chains use the id `paseo` and share that database directory. Otherwise the node fails with a genesis mismatch.
+- The file can also live under `/mnt`, `/media` or `/run/media` after `sudo snap connect polkadot:removable-media`. The service cannot read files under `$HOME`.
+- `polkadot.polkadot-cli` plugs the `home` interface, so it can read a spec directly from your home directory: `polkadot.polkadot-cli --chain=$HOME/paseo.raw.json ...`.
+- When Paseo publishes new bootnodes, re-run the download and install commands above and restart the service.
 
 
 ### Start the service

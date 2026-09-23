@@ -269,4 +269,46 @@ test_validate_service_args() {
     fi
 }
 
-test_validate_service_args
+# Test function for the committed Paseo chain spec test resource
+test_paseo_chain_spec_resource() {
+    echo ""
+    echo "Testing Paseo chain spec test resource..."
+
+    local tests_dir
+    tests_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    local paseo_spec="$tests_dir/resources/chainspecs/paseo.raw.json"
+
+    local test_count=0
+    local passed_count=0
+
+    test_count=$((test_count + 1))
+    echo "  Test $test_count: Paseo chain spec resource exists"
+    if [[ -f "$paseo_spec" ]]; then
+        echo "    PASSED: $paseo_spec exists"
+        passed_count=$((passed_count + 1))
+    else
+        echo "    FAILED: $paseo_spec is missing"
+    fi
+
+    test_count=$((test_count + 1))
+    echo "  Test $test_count: Paseo chain spec resource is the relaunched relay (name Paseo, protocolId pad)"
+    if python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d.get("protocolId")=="pad" and d.get("name")=="Paseo" else 1)' "$paseo_spec" 2>/dev/null; then
+        echo "    PASSED: spec is name=Paseo protocolId=pad"
+        passed_count=$((passed_count + 1))
+    else
+        echo "    FAILED: spec is not the relaunched Paseo spec"
+    fi
+
+    echo ""
+    echo "Test Summary (paseo chain spec resource):"
+    echo "  Total tests: $test_count"
+    echo "  Passed: $passed_count"
+    echo "  Failed: $((test_count - passed_count))"
+
+    [ "$passed_count" -eq "$test_count" ]
+}
+
+overall_status=0
+test_validate_service_args || overall_status=1
+test_paseo_chain_spec_resource || overall_status=1
+exit "$overall_status"

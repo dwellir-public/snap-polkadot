@@ -32,6 +32,9 @@ description: |
   The value set here will be passed to the Polkadot binary with a few exceptions listed below. 
   * --name defaults to the systems hostname the first time the snap is installed.
   * --base-path is always set by the snap to `$SNAP_COMMON/polkadot_base` and is not allowed to be configured.
+  * To run Paseo, pass a chain spec file placed under $SNAP_COMMON, e.g.
+    --chain=/var/snap/polkadot/common/chain-specs/paseo.raw.json. The paseo spec built into the binary is the
+    retired pre-relaunch chain and finds no peers.
 
   endure [default=false]
   If true the Polkadot service will not be restarted after a snap refresh.
