@@ -49,9 +49,9 @@ description: |
 parts:
   polkadot:
     plugin: rust
-    rust-channel: "1.88.0"
+    rust-channel: "1.93.0"
     source: https://github.com/paritytech/polkadot-sdk.git
-    source-tag: polkadot-stable2606-3
+    source-tag: polkadot-stable2609
     source-depth: 1
     build-packages:
       - build-essential
@@ -62,16 +62,16 @@ parts:
       - pkg-config
       - protobuf-compiler
     override-pull: |
-      rustup install 1.88.0
-      rustup default 1.88.0
+      rustup install 1.93.0
+      rustup default 1.93.0
       rustup update nightly
-      rustup component add rust-src --toolchain 1.88.0
-      rustup target add wasm32-unknown-unknown --toolchain 1.88.0
+      rustup component add rust-src --toolchain 1.93.0
+      rustup target add wasm32-unknown-unknown --toolchain 1.93.0
       rustup target add wasm32-unknown-unknown --toolchain nightly
-      rustup target add wasm32v1-none --toolchain 1.88.0
-      rustup target add wasm32v1-none --toolchain 1.88.0-x86_64-unknown-linux-gnu
+      rustup target add wasm32v1-none --toolchain 1.93.0
+      rustup target add wasm32v1-none --toolchain 1.93.0-x86_64-unknown-linux-gnu
       craftctl default
-      craftctl set version="polkadot-stable2606-3-$(git rev-parse --short HEAD)"
+      craftctl set version="polkadot-stable2609-$(git rev-parse --short HEAD)"
     rust-path:
       - polkadot/
     prime:
